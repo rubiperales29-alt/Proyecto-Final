@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Compra - Nonna</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5d1927",
+                        "brand-pink": "#FEBDC6",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#1f1316",
+                    },
+                    fontFamily: { "display": ["Montserrat", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { background-color: #FEBDC6; font-family: 'Montserrat', sans-serif; }
+        .modal-mensaje { transition: opacity 0.3s ease, visibility 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen p-4 flex items-center justify-center">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-primary/10 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-primary">Nueva Compra</h1>
+                <p class="text-slate-500 text-sm">Registra la compra de materias primas a un proveedor</p>
+            </div>
+            <a href="compras.html" class="text-primary hover:bg-primary/10 p-2 rounded-full transition">
+                <span class="material-symbols-outlined">close</span>
+            </a>
+        </div>
+        <div class="p-6">
+            <form id="form-compra" class="space-y-6">
+                <!-- Proveedor -->
+                <div>
+                    <label class="block text-sm font-bold text-primary mb-1">Proveedor *</label>
+                    <select id="id_proveedor" class="w-full p-3 border border-primary/20 rounded-xl focus:ring-primary" required>
+                        <option value="">Cargando proveedores...</option>
+                    </select>
+                </div>
+                <!-- Fecha -->
+                <div>
+                    <label class="block text-sm font-bold text-primary mb-1">Fecha de compra *</label>
+                    <input type="datetime-local" id="fecha" class="w-full p-3 border border-primary/20 rounded-xl focus:ring-primary" required>
+                </div>
+                <!-- Productos (detalle dinámico) -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-bold text-primary">Productos / Materias primas</label>
+                        <button type="button" id="btn-agregar-producto" class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base">add</span> Agregar producto
+                        </button>
+                    </div>
+                    <div id="productos-container" class="space-y-3">
+                        <div class="text-center text-slate-400 py-4">No hay productos agregados. Haz clic en "Agregar producto".</div>
+                    </div>
+                </div>
+                <!-- Botones -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" id="btn-submit" class="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">shopping_cart</span>
+                        Registrar Compra
+                    </button>
+                    <a href="compras.html" class="flex-1 border-2 border-primary text-primary font-bold py-3 rounded-xl hover:bg-primary/5 text-center">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div id="modal-exito" class="fixed inset-0 flex items-center justify-center z-50 hidden modal-mensaje">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 text-center shadow-2xl">
+            <span class="material-symbols-outlined text-green-600 text-5xl mb-2">check_circle</span>
+            <h3 class="text-xl font-bold text-slate-900">¡Compra registrada!</h3>
+            <p class="text-slate-500 mt-2">La compra se ha guardado correctamente y el inventario se ha actualizado.</p>
+            <button id="btn-cerrar-exito" class="mt-6 w-full bg-primary text-white py-2 rounded-xl font-bold">Continuar</button>
+        </div>
+    </div>
+
+    <div id="modal-error" class="fixed inset-0 flex items-center justify-center z-50 hidden modal-mensaje">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 text-center shadow-2xl">
+            <span class="material-symbols-outlined text-red-600 text-5xl mb-2">error</span>
+            <h3 class="text-xl font-bold text-slate-900">Error</h3>
+            <p id="error-mensaje" class="text-slate-500 mt-2"></p>
+            <button id="btn-cerrar-error" class="mt-6 w-full bg-primary text-white py-2 rounded-xl font-bold">Aceptar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://3.15.13.161:8000/api';
+        const TOKEN = localStorage.token;
+        if (!TOKEN) {
+            alert('No hay sesión activa. Redirigiendo...');
+            window.location.href = 'index.html';
+        }
+
+        function getHeaders() {
+            return {
+                'accept': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // Datos
+        let proveedores = [];
+        let materiasPrimas = [];
+        let unidadesMap = {}; // id_unidad -> texto legible
+        let detalles = []; // { id_materia, cantidad, nombre, unidad }
+
+        // Elementos
+        const container = document.getElementById('productos-container');
+        const proveedorSelect = document.getElementById('id_proveedor');
+        const fechaInput = document.getElementById('fecha');
+
+        // Funciones modales
+        function mostrarExito(callback) {
+            const modal = document.getElementById('modal-exito');
+            modal.classList.remove('hidden');
+            document.getElementById('btn-cerrar-exito').onclick = () => {
+                modal.classList.add('hidden');
+                if (callback) callback();
+            };
+        }
+
+        function mostrarError(mensaje) {
+            const modal = document.getElementById('modal-error');
+            document.getElementById('error-mensaje').innerText = mensaje;
+            modal.classList.remove('hidden');
+            document.getElementById('btn-cerrar-error').onclick = () => modal.classList.add('hidden');
+        }
+
+        // Cargar unidades de medida
+        async function cargarUnidades() {
+            try {
+                const res = await fetch(`${API_BASE}/unidad_medida/`, { headers: getHeaders() });
+                if (res.ok) {
+                    const unidades = await res.json();
+                    unidadesMap = {};
+                    unidades.forEach(u => {
+                        const texto = u.descripcion ? `${u.descripcion} (${u.abreviatura})` : u.abreviatura || `Unidad ${u.id_unidad}`;
+                        unidadesMap[u.id_unidad] = texto;
+                    });
+                }
+            } catch(e) { console.error('Error cargando unidades', e); }
+        }
+
+        // Cargar datos auxiliares
+        async function cargarProveedores() {
+            try {
+                const res = await fetch(`${API_BASE}/proveedor/`, { headers: getHeaders() });
+                if (!res.ok) throw new Error();
+                proveedores = await res.json();
+                proveedorSelect.innerHTML = '<option value="">Seleccione un proveedor</option>';
+                proveedores.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id_proveedor;
+                    opt.textContent = p.descripcion || `Proveedor ${p.id_proveedor}`;
+                    proveedorSelect.appendChild(opt);
+                });
+            } catch(e) {
+                proveedorSelect.innerHTML = '<option value="">Error al cargar proveedores</option>';
+                mostrarError('No se pudieron cargar los proveedores');
+            }
+        }
+
+        async function cargarMaterias() {
+            try {
+                const res = await fetch(`${API_BASE}/materia_prima/`, { headers: getHeaders() });
+                if (!res.ok) throw new Error();
+                materiasPrimas = await res.json();
+            } catch(e) {
+                mostrarError('No se pudieron cargar las materias primas');
+            }
+        }
+
+        // Renderizar lista de productos en el formulario
+        function renderizarProductos() {
+            if (detalles.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay productos agregados. Haz clic en "Agregar producto".</div>';
+                return;
+            }
+            container.innerHTML = '';
+            detalles.forEach((det, idx) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-3 bg-slate-50 rounded-xl';
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <span class="font-bold">${escapeHtml(det.nombre)}</span>
+                        <span class="text-xs text-slate-500 ml-2">Cantidad: ${det.cantidad} ${det.unidad}</span>
+                    </div>
+                    <button type="button" class="text-red-500 hover:bg-red-50 p-1 rounded-full eliminar-producto" data-idx="${idx}">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            // Eventos eliminar
+            document.querySelectorAll('.eliminar-producto').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    detalles.splice(idx, 1);
+                    renderizarProductos();
+                });
+            });
+        }
+
+        // Modal para agregar producto (con unidad)
+        function mostrarModalAgregarProducto() {
+            if (materiasPrimas.length === 0) {
+                mostrarError('No hay materias primas registradas. Primero agrega materias primas.');
+                return;
+            }
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+                    <h3 class="text-xl font-bold mb-4">Agregar producto</h3>
+                    <div class="space-y-4">
+                        <select id="select-materia" class="w-full p-3 border rounded-xl">
+                            <option value="">Seleccione materia prima</option>
+                            ${materiasPrimas.map(mp => `<option value="${mp.id_materia}" data-unidad="${unidadesMap[mp.id_unidad] || ''}" data-nombre="${escapeHtml(mp.descripcion)}">${escapeHtml(mp.descripcion)} (${unidadesMap[mp.id_unidad] || 'unidad'})</option>`).join('')}
+                        </select>
+                        <input type="number" id="cantidad-producto" class="w-full p-3 border rounded-xl" placeholder="Cantidad" min="1" step="1" value="1">
+                        <div class="flex gap-3 justify-end">
+                            <button id="cancelar-producto" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                            <button id="confirmar-producto" class="px-4 py-2 bg-primary text-white rounded-xl">Agregar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('#cancelar-producto').onclick = () => modal.remove();
+            modal.querySelector('#confirmar-producto').onclick = () => {
+                const select = modal.querySelector('#select-materia');
+                const id_materia = parseInt(select.value);
+                if (!id_materia) { mostrarError('Seleccione una materia prima'); return; }
+                const cantidad = parseInt(modal.querySelector('#cantidad-producto').value);
+                if (isNaN(cantidad) || cantidad < 1) { mostrarError('Cantidad inválida'); return; }
+                const selectedOption = select.options[select.selectedIndex];
+                const nombre = selectedOption.getAttribute('data-nombre');
+                const unidad = selectedOption.getAttribute('data-unidad');
+                const existente = detalles.find(d => d.id_materia === id_materia);
+                if (existente) {
+                    existente.cantidad += cantidad;
+                } else {
+                    detalles.push({ id_materia, cantidad, nombre, unidad });
+                }
+                renderizarProductos();
+                modal.remove();
+            };
+        }
+
+        // Crear compra en API
+        async function crearCompra(datos) {
+            const res = await fetch(`${API_BASE}/compra/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify(datos)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Error al crear compra');
+            }
+            return res.json();
+        }
+
+        // Envío del formulario
+        document.getElementById('form-compra').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id_proveedor = parseInt(proveedorSelect.value);
+            if (!id_proveedor) {
+                mostrarError('Seleccione un proveedor');
+                return;
+            }
+            let fecha = fechaInput.value;
+            if (!fecha) {
+                mostrarError('Ingrese la fecha de compra');
+                return;
+            }
+            fecha = new Date(fecha).toISOString();
+
+            if (detalles.length === 0) {
+                mostrarError('Debe agregar al menos un producto');
+                return;
+            }
+
+            const detalle = detalles.map(d => ({
+                id_materia: d.id_materia,
+                cantidad: d.cantidad
+            }));
+
+            const payload = { id_proveedor, fecha, detalle };
+
+            const btn = document.getElementById('btn-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Guardando...';
+            btn.disabled = true;
+
+            try {
+                await crearCompra(payload);
+                mostrarExito(() => {
+                    window.location.href = 'compras.html';
+                });
+            } catch (error) {
+                let msg = error.message;
+                if (msg.includes('duplicate')) msg = 'Ya existe una compra con esos datos.';
+                mostrarError('Error al registrar compra: ' + msg);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-agregar-producto').addEventListener('click', mostrarModalAgregarProducto);
+
+        // Inicializar fecha por defecto (ahora)
+        const ahora = new Date();
+        ahora.setMinutes(ahora.getMinutes() - ahora.getTimezoneOffset());
+        fechaInput.value = ahora.toISOString().slice(0, 16);
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+        }
+
+        // Cargar datos
+        Promise.all([cargarUnidades(), cargarProveedores(), cargarMaterias()]).then(() => {
+            renderizarProductos();
+        });
+    </script>
+</body>
+</html>

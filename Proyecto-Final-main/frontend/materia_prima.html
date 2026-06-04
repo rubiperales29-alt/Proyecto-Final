@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Nonna - Gestión de Materia Prima</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Montserrat:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: { "primary": "#5d1927", "accent-pink": "#FEBDC6", "background-light": "#f8f6f6", "background-dark": "#1f1316" },
+          fontFamily: { "display": ["Montserrat", "Plus Jakarta Sans", "sans-serif"] },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px", "ROUND_EIGHT": "0.5rem" },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Montserrat', sans-serif; background-color: #FEBDC6; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body class="bg-accent-pink min-h-screen font-display">
+  <!-- Top Navigation Bar Begins-->
+  <header class="w-full bg-[#f3dfe0] dark:bg-slate-900 border-b border-primary/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="bg-primary p-2 rounded-lg text-white">
+          <span class="material-symbols-outlined block text-2xl">bakery_dining</span>
+        </div>
+        <h1 class="text-primary text-xl font-bold tracking-tight">Nonna</h1>
+      </div>
+      <div class="h-8 w-[1px] bg-primary/20"></div>
+      <a href="index.html" class="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors duration-200">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span class="text-sm font-bold leading-normal">Menú de CRUDs</span>
+      </a>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+        <div class="text-right hidden sm:block">
+          <p id="textoUsuario" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Nombre de usuario</p>
+          <p id="textoRol" class="text-xs text-slate-500">Rol</p>
+        </div>
+      </div>
+      <button id="botonCerrarSesion" class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+        <span class="material-symbols-outlined text-xl">logout</span>
+        <span class="hidden sm:inline text-sm font-medium">Cerrar Sesión</span>
+      </button>
+    </div>
+  </header>
+  <script>
+    document.getElementById("textoUsuario").innerText = localStorage.getItem("usuario") || "Invitado";
+    document.getElementById("textoRol").innerText = localStorage.getItem("rol") || "Sin rol";
+    const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+    botonCerrarSesion.addEventListener("click", function () {
+      localStorage.clear();
+      window.location.href = "registro.html";
+    });
+  </script>
+  <!-- Top Navigation Bar Ends-->
+
+  <main class="w-[80%] mx-auto flex flex-1 justify-center bg-white rounded-ROUND_EIGHT shadow-xl overflow-hidden min-h-[800px] flex flex-col">
+    <div class="p-8 border-b border-slate-100 flex items-center justify-between bg-white">
+      <div>
+        <div class="flex items-center gap-3">
+          <h2 class="text-3xl font-extrabold text-primary">Gestión de Materia Prima</h2>
+          <!-- Botón sutil para regresar al menú CRUD's del Sistema -->
+         
+        </div>
+        <p class="text-slate-500 mt-1">Administración de insumos</p>
+      </div>
+      <div class="flex gap-4">
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input id="buscador" class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-lg focus:ring-2 focus:ring-primary/20 w-64 text-sm" placeholder="Buscar Materia Prima..." type="text">
+        </div>
+        <a href="materia_prima_form.html" class="bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-primary/90 transition-colors shadow-sm">
+          <span class="material-symbols-outlined text-lg">add_circle</span>
+          Agregar Materia Prima
+        </a>
+      </div>
+    </div>
+    <div class="flex-1 overflow-x-auto p-8">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="text-slate-500 text-sm font-semibold uppercase tracking-wider border-b border-slate-100">
+            <th class="px-4 py-3 font-bold">ID</th>
+            <th class="px-4 py-3 font-bold">Descripción</th>
+            <th class="px-4 py-3 font-bold text-center">U. Medida</th>
+            <th class="px-4 py-3 font-bold text-center">Stock Actual</th>
+            <th class="px-4 py-3 font-bold text-right">Acciones</th>
+           </>
+        </thead>
+        <tbody id="tabla-materia-body" class="divide-y divide-slate-50">
+          <tr><td colspan="5" class="text-center py-10 text-slate-400">Cargando...NonNull
+        </tbody>
+      </table>
+    </div>
+  </main>
+  <footer class="text-center py-4 text-primary/60 text-sm font-medium">©Nonna</footer>
+
+  <script>
+    const API_BASE = 'http://98.92.235.60:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+      return { 'accept': 'application/json', 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
+    }
+
+    async function listarMaterias() {
+      const res = await fetch(`${API_BASE}/materia_prima/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      return res.json();
+    }
+
+    async function listarUnidades() {
+      const res = await fetch(`${API_BASE}/unidad_medida/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('Error cargando unidades');
+      return res.json();
+    }
+
+    let todasMaterias = [];
+    let unidadesMap = {};
+
+    async function cargarUnidadesMap() {
+      try {
+        const unidades = await listarUnidades();
+        unidadesMap = {};
+        unidades.forEach(u => {
+          const texto = u.descripcion ? `${u.descripcion} (${u.abreviatura})` : `Unidad ${u.id_unidad}`;
+          unidadesMap[u.id_unidad] = texto;
+        });
+      } catch (error) { console.error(error); }
+    }
+
+    function renderizarTabla(materias) {
+      const tbody = document.getElementById('tabla-materia-body');
+      if (!materias.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-slate-400">No hay materias primas. ¡Agrega la primera!NonNull`;
+        return;
+      }
+      tbody.innerHTML = '';
+      materias.forEach(mat => {
+        const stock = (mat.stock_actual !== undefined && mat.stock_actual !== null) ? mat.stock_actual : 0;
+        const unidadNombre = unidadesMap[mat.id_unidad] || `ID: ${mat.id_unidad}`;
+        const fila = `
+          <tr class="hover:bg-slate-50/50 transition-colors group">
+            <td class="px-4 py-3 text-slate-600 font-medium">${mat.id_materia}</td>
+            <td class="px-4 py-3 text-slate-900 font-semibold">${escapeHtml(mat.descripcion)}</td>
+            <td class="px-4 py-3 text-center text-slate-600">${escapeHtml(unidadNombre)}</td>
+            <td class="px-4 py-3 text-center text-slate-900 font-medium">${stock}</td>
+            <td class="px-4 py-3 text-right">
+              <div class="flex justify-end gap-2">
+                <!-- Botón Editar - Mismo estilo que Recetas -->
+                <a href="materia_prima_form.html?id=${mat.id_materia}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+                  <span class="material-symbols-outlined text-xl">edit</span>
+                </a>
+                <!-- Botón Eliminar - Mismo estilo que Recetas -->
+                <a href="materia_prima_eliminar.html?id=${mat.id_materia}" class="p-2 text-primary/40 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                  <span class="material-symbols-outlined text-xl">delete</span>
+                </a>
+              </div>
+             </td>
+           </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', fila);
+      });
+    }
+
+    async function cargarMaterias() {
+      const tbody = document.getElementById('tabla-materia-body');
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-slate-400">Cargando...NonNull`;
+      try {
+        todasMaterias = await listarMaterias();
+        await cargarUnidadesMap();
+        renderizarTabla(todasMaterias);
+      } catch (error) {
+        let mensaje = error.message;
+        if (mensaje.includes('401')) mensaje = 'Token inválido. Actualiza TOKEN.';
+        else if (mensaje.includes('Failed to fetch')) mensaje = 'Error de CORS o conexión. Usa Live Server.';
+        tbody.innerHTML = `<td><td colspan="5" class="text-center py-10 text-red-500">Error: ${mensaje}NonNull`;
+      }
+    }
+
+    document.getElementById('buscador')?.addEventListener('input', (e) => {
+      const texto = e.target.value.toLowerCase();
+      if (!texto.trim()) return renderizarTabla(todasMaterias);
+      const filtradas = todasMaterias.filter(mat => mat.descripcion?.toLowerCase().includes(texto));
+      renderizarTabla(filtradas);
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) { return m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'); });
+    }
+
+    cargarMaterias();
+  </script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style type="text/tailwindcss">
+    :root { --primary-color: #5d1927; --bg-color: #febdc6; } 
+</style>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "primary": "#5d1927", "background-light": "#febdc6", "background-dark": "#1f1316" },
+                fontFamily: { "display": ["Plus Jakarta Sans"] },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<title>Nonna - GESTIÓN DE USUARIOS</title>
+<style>
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+    }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+    <!-- Top Navigation Bar Begins-->
+    <header
+        class="w-full bg-[#f3dfe0] dark:bg-slate-900 border-b border-primary/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+            <div class="bg-primary p-2 rounded-lg text-white">
+                <span class="material-symbols-outlined block text-2xl">bakery_dining</span>
+            </div>
+            <h1 class="text-primary text-xl font-bold tracking-tight">Nonna</h1>
+        </div>
+        <div class="h-8 w-[1px] bg-primary/20"></div>
+        <a href="index.html" class="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors duration-200">
+                <span class="material-symbols-outlined">arrow_back</span>
+                <span class="text-sm font-bold leading-normal">Menú de CRUDs</span>
+        </a>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+                <div class="text-right hidden sm:block">
+                    <p id="textoUsuario" class="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        Nombre de usuario
+                    </p>
+                    <p id="textoRol" class="text-xs text-slate-500">Rol</p>
+                </div>
+            </div>
+            <!-- Botón de Cerrar Sesión -->
+            <button id="botonCerrarSesion"
+                class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                <span class="material-symbols-outlined text-xl">logout</span>
+                <span class="hidden sm:inline text-sm font-medium">Cerrar Sesión</span>
+            </button>
+        </div>
+    </header>
+    <script>
+        document.getElementById("textoUsuario").innerText =
+            localStorage.getItem("usuario") || "Invitado";
+        document.getElementById("textoRol").innerText =
+            localStorage.getItem("rol") || "Sin rol";
+
+        const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+        botonCerrarSesion.addEventListener("click", function () {
+            localStorage.clear();
+            window.location.href = "registro.html";
+        });
+    </script>
+    <!-- Top Navigation Bar Ends-->
+    <main class="flex flex-1 justify-center py-10 px-10">
+        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1">
+            <div class="flex flex-col gap-2 mb-8">
+                <h1 class="text-primary text-5xl font-black leading-tight tracking-[-0.033em]">GESTIÓN DE USUARIOS</h1>
+                <p class="text-primary/70 text-lg font-medium">Administración de acceso y perfiles de usuario del sistema</p>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div class="relative w-full md:w-96">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-primary/50">search</span>
+                    <input id="buscador" class="w-full pl-10 pr-4 py-2 rounded-lg border-none bg-white/70 focus:ring-2 focus:ring-primary/20 text-primary placeholder-primary/40" placeholder="Buscar usuario...">
+                </div>
+                <a href="usuario_nuevo.html" class="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-lg font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20">
+                    <span class="material-symbols-outlined">person_add</span>
+                    <span>Nuevo Usuario</span>
+                </a>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-primary/5 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primary/5">
+                                <th class="px-6 py-4 text-primary font-bold text-sm uppercase tracking-wider">Nombre</th>
+                                <th class="px-6 py-4 text-primary font-bold text-sm uppercase tracking-wider">Rol</th>
+                                <th class="px-6 py-4 text-primary font-bold text-sm uppercase tracking-wider text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-usuarios" class="divide-y divide-primary/5">
+                            <tr><td colspan="3" class="text-center py-10 text-primary/50">Cargando usuarios...NonNull
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const API_BASE = 'http://3.15.13.161:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    async function listarUsuarios() {
+        const res = await fetch(`${API_BASE}/usuario/`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`Error ${res.status}: ${res.statusText}`);
+        return res.json();
+    }
+
+    async function eliminarUsuario(id) {
+        const res = await fetch(`${API_BASE}/usuario/${id}`, { method: 'DELETE', headers: getHeaders() });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || 'Error al eliminar');
+        }
+        return res.json();
+    }
+
+    let todosUsuarios = [];
+
+    function renderizarTabla(usuarios) {
+        const tbody = document.getElementById('tabla-usuarios');
+        if (!usuarios.length) {
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-10 text-primary/50">No hay usuarios. ¡Crea el primero!NonNull`;
+            return;
+        }
+        tbody.innerHTML = '';
+        usuarios.forEach(usr => {
+            const fila = `
+                <tr class="hover:bg-primary/5 transition-colors">
+                    <td class="px-6 py-4 text-primary font-semibold">${escapeHtml(usr.nombre)}</td>
+                    <td class="px-6 py-4 text-primary/80 italic">${escapeHtml(usr.rol || `ID: ${usr.id_rol}`)}</td>
+                    <td class="px-6 py-4">
+                        <div class="flex justify-center gap-2">
+                            <!-- Botón Editar - Mismo estilo que Recetas, Productos y Materia Prima -->
+                            <a href="usuario_editar.html?nombre=${encodeURIComponent(usr.nombre)}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+                                <span class="material-symbols-outlined text-xl">edit</span>
+                            </a>
+                            <!-- Botón Eliminar - Mismo estilo que Recetas, Productos y Materia Prima -->
+                            <a href="usuario_eliminar.html?id=${usr.id_usuario}&nombre=${encodeURIComponent(usr.nombre)}" class="p-2 text-primary/40 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                                <span class="material-symbols-outlined text-xl">delete</span>
+                            </a>
+                        </div>
+                    </td>
+                </td>
+            `;
+            tbody.insertAdjacentHTML('beforeend', fila);
+        });
+    }
+
+    async function cargarUsuarios() {
+        const tbody = document.getElementById('tabla-usuarios');
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-10 text-primary/50">Cargando...NonNull`;
+        try {
+            todosUsuarios = await listarUsuarios();
+            renderizarTabla(todosUsuarios);
+        } catch (error) {
+            console.error(error);
+            let mensaje = error.message;
+            if (mensaje.includes('401') || mensaje.includes('Token')) mensaje = 'Token inválido o expirado. Actualiza TOKEN.';
+            else if (mensaje.includes('Failed to fetch')) mensaje = 'Error de CORS o conexión. Usa Live Server.';
+            tbody.innerHTML = `<tr><td colspan="3" class="text-center py-10 text-red-500">Error: ${mensaje}NonNull`;
+        }
+    }
+
+    const buscador = document.getElementById('buscador');
+    if (buscador) {
+        buscador.addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase();
+            if (!texto.trim()) return renderizarTabla(todosUsuarios);
+            const filtrados = todosUsuarios.filter(u => u.nombre?.toLowerCase().includes(texto));
+            renderizarTabla(filtrados);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+
+    cargarUsuarios();
+</script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Editar Datos del Cliente - Nonna</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#5d1927",
+                    "background-light": "#f8f6f6",
+                    "background-dark": "#1f1315",
+                    "accent-pink": "#FEBDC6",
+                },
+                fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<style>
+    /* Toast notifications */
+    .toast-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        min-width: 280px;
+        max-width: 380px;
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        transform: translateX(400px);
+        transition: transform 0.3s ease-out;
+        border-left: 4px solid;
+        pointer-events: auto;
+    }
+    .toast-notification.show { transform: translateX(0); }
+    .toast-notification.success { border-left-color: #10b981; }
+    .toast-notification.error { border-left-color: #ef4444; }
+    .toast-notification.warning { border-left-color: #f59e0b; }
+    .toast-icon { flex-shrink: 0; }
+    .toast-content { flex: 1; font-size: 0.875rem; line-height: 1.4; }
+    .toast-close { cursor: pointer; color: #9ca3af; transition: color 0.2s; }
+    .toast-close:hover { color: #4b5563; }
+</style>
+</head>
+<body class="bg-accent-pink font-display min-h-screen flex items-center justify-center p-4 sm:p-8">
+<div class="w-full max-w-[1200px] bg-white rounded-xl shadow-xl overflow-hidden">
+    <main class="p-6 sm:p-10">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-slate-900 text-3xl font-extrabold tracking-tight">Editar Datos del Cliente</h1>
+            <p class="text-slate-500 mt-2">Modifique la información del perfil y las direcciones del cliente.</p>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+            <!-- Columna izquierda: datos básicos -->
+            <div class="lg:col-span-5 space-y-6">
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">Información Básica</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block mb-2"><span class="text-slate-700 text-sm font-semibold">ID Cliente (No editable)</span></label>
+                        <input id="id_cliente" class="w-full bg-slate-50 border border-slate-200 rounded-lg h-12 px-4 text-slate-500 cursor-not-allowed focus:outline-none font-medium" readonly>
+                    </div>
+                    <div>
+                        <label class="block mb-2"><span class="text-slate-700 text-sm font-semibold">Nombre</span></label>
+                        <input id="nombre" class="w-full border border-slate-200 rounded-lg h-12 px-4 text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="Ingrese nombre" type="text" required>
+                    </div>
+                    <div>
+                        <label class="block mb-2"><span class="text-slate-700 text-sm font-semibold">Apellido</span></label>
+                        <input id="apellido" class="w-full border border-slate-200 rounded-lg h-12 px-4 text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="Ingrese apellido" type="text" required>
+                    </div>
+                    <div>
+                        <label class="block mb-2"><span class="text-slate-700 text-sm font-semibold">Teléfono</span></label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-medium">+</span>
+                            <input id="telefono" class="w-full border border-slate-200 rounded-lg h-12 pl-10 pr-4 text-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none" placeholder="000 000 000" type="text">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna derecha: direcciones -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">Direcciones del cliente</h3>
+                    <button id="btn-agregar-direccion" class="text-sm bg-primary/10 text-primary px-4 py-2 rounded-xl font-semibold hover:bg-primary/20 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-lg"></span> Agregar dirección
+                    </button>
+                </div>
+                <!-- Lista de direcciones -->
+                <div id="lista-direcciones" class="space-y-4">
+                    <p class="text-slate-500 text-sm">Cargando direcciones...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-8 mt-10 border-t border-slate-100">
+            <button id="btn-guardar" class="bg-primary text-white font-bold px-8 py-4 rounded-lg hover:bg-opacity-90 transition-colors flex items-center justify-center gap-2 min-w-[200px] shadow-lg shadow-primary/10">
+                <span class="material-symbols-outlined"></span> Guardar Cambios
+            </button>
+            <a href="clientes.html" class="bg-transparent text-primary font-bold px-8 py-4 rounded-lg border-2 border-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2 min-w-[200px]">
+                <span class="material-symbols-outlined"></span> Cancelar
+            </a>
+        </div>
+    </main>
+</div>
+
+<script>
+    const API_BASE = 'http://98.92.235.60:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return { 'accept': 'application/json', 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
+    }
+
+    // ---------- SISTEMA DE NOTIFICACIONES TOAST ----------
+    function showToast(message, type = 'info', duration = 4000) {
+        const toastContainer = document.getElementById('toast-container') || (() => {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.position = 'fixed';
+            container.style.top = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '1000';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            document.body.appendChild(container);
+            return container;
+        })();
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        
+        let icon = '';
+        if (type === 'success') icon = '';
+        else if (type === 'error') icon = 'error';
+        else if (type === 'warning') icon = 'warning';
+        else icon = 'info';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <span class="material-symbols-outlined" style="color: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'}">${icon}</span>
+            </div>
+            <div class="toast-content">${message}</div>
+            <div class="toast-close">
+                <span class="material-symbols-outlined text-sm"></span>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        });
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('id');
+    if (!clienteId) {
+        showToast('No se especificó qué cliente editar.', 'error');
+        setTimeout(() => { window.location.href = 'clientes.html'; }, 1500);
+    }
+
+    // ---------- CARGAR DATOS DEL CLIENTE ----------
+    async function cargarCliente() {
+        try {
+            const res = await fetch(`${API_BASE}/cliente/${clienteId}`, { headers: getHeaders() });
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            const cliente = await res.json();
+            document.getElementById('id_cliente').value = cliente.id_cliente;
+            document.getElementById('nombre').value = cliente.nombre || '';
+            document.getElementById('apellido').value = cliente.apellido || '';
+            document.getElementById('telefono').value = cliente.telefono || '';
+        } catch (error) {
+            showToast('Error al cargar cliente: ' + error.message, 'error');
+            setTimeout(() => { window.location.href = 'clientes.html'; }, 2000);
+        }
+    }
+
+    // ---------- CARGAR DIRECCIONES ----------
+    async function cargarDirecciones() {
+        const container = document.getElementById('lista-direcciones');
+        container.innerHTML = '<p class="text-slate-500 text-sm">Cargando direcciones...</p>';
+        try {
+            const res = await fetch(`${API_BASE}/direccion/`, { headers: getHeaders() });
+            if (!res.ok) {
+                let errorMsg = `HTTP ${res.status}`;
+                try {
+                    const errorData = await res.json();
+                    errorMsg = errorData.detail || errorMsg;
+                } catch(e) {}
+                throw new Error(errorMsg);
+            }
+            const todas = await res.json();
+            const misDirecciones = todas.filter(d => d.id_cliente == clienteId);
+            if (misDirecciones.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-sm">No hay direcciones registradas para este cliente.</p>';
+                return;
+            }
+            container.innerHTML = '';
+            misDirecciones.forEach(dir => {
+                const div = document.createElement('div');
+                div.className = 'p-4 border border-slate-200 rounded-xl flex justify-between items-center bg-slate-50/30';
+                div.innerHTML = `
+                    <div>
+                        <p class="font-bold text-slate-900">Dirección</p>
+                        <p class="text-sm text-slate-500">${escapeHtml(dir.descripcion)}</p>
+                    </div>
+                    <button class="eliminar-direccion text-slate-400 hover:text-red-600 transition-colors" data-id="${dir.id_direccion}" title="Eliminar dirección">
+                        <span class="material-symbols-outlined">Eliminar</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            // Eventos eliminar dirección con confirmación visual
+            document.querySelectorAll('.eliminar-direccion').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const confirmDelete = confirm('¿Eliminar esta dirección? Esta acción no se puede deshacer.');
+                    if (!confirmDelete) return;
+                    try {
+                        const delRes = await fetch(`${API_BASE}/direccion/${btn.dataset.id}`, { method: 'DELETE', headers: getHeaders() });
+                        if (!delRes.ok) {
+                            const errData = await delRes.json();
+                            throw new Error(errData.detail || 'Error al eliminar');
+                        }
+                        showToast('Dirección eliminada correctamente', 'success');
+                        cargarDirecciones(); // recargar lista
+                    } catch(e) {
+                        showToast('Error al eliminar dirección: ' + e.message, 'error');
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error cargando direcciones:', error);
+            container.innerHTML = `<p class="text-red-500 text-sm">Error al cargar direcciones: ${error.message}</p>`;
+        }
+    }
+
+    // ---------- MODAL AGREGAR DIRECCIÓN ----------
+    function mostrarModalAgregarDireccion() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+        modalDiv.innerHTML = `
+            <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+                <h3 class="text-xl font-bold mb-4">Agregar Dirección</h3>
+                <textarea id="nueva-descripcion" class="w-full border rounded-xl p-3" rows="3" placeholder="Calle, número, colonia, ciudad, CP..."></textarea>
+                <div class="flex justify-end gap-3 mt-6">
+                    <button id="cancelar-modal" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                    <button id="confirmar-modal" class="px-4 py-2 bg-primary text-white rounded-xl">Guardar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('#cancelar-modal').onclick = () => modalDiv.remove();
+        modalDiv.querySelector('#confirmar-modal').onclick = async () => {
+            const descripcion = modalDiv.querySelector('#nueva-descripcion').value.trim();
+            if (!descripcion) {
+                showToast('La dirección es obligatoria', 'warning');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_BASE}/direccion/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ id_cliente: parseInt(clienteId), descripcion })
+                });
+                if (!res.ok) {
+                    const errData = await res.json();
+                    throw new Error(errData.detail || 'Error al guardar');
+                }
+                showToast('Dirección agregada correctamente', 'success');
+                modalDiv.remove();
+                cargarDirecciones(); // recargar lista
+            } catch(e) {
+                showToast('Error al guardar dirección: ' + e.message, 'error');
+            }
+        };
+    }
+
+    // ---------- ACTUALIZAR CLIENTE ----------
+    async function actualizarCliente() {
+        const nombre = document.getElementById('nombre').value.trim();
+        const apellido = document.getElementById('apellido').value.trim();
+        const telefono = document.getElementById('telefono').value.trim();
+        
+        if (!nombre || !apellido) {
+            showToast('Nombre y apellido son obligatorios', 'warning');
+            return;
+        }
+        
+        const btn = document.getElementById('btn-guardar');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin"></span> Guardando...';
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(`${API_BASE}/cliente/${clienteId}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify({ nombre, apellido, telefono })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Error al actualizar');
+            }
+            showToast('Cliente actualizado correctamente', 'success');
+            setTimeout(() => {
+                window.location.href = 'clientes.html';
+            }, 1500);
+        } catch (error) {
+            showToast('Error: ' + error.message, 'error');
+            btn.innerHTML = originalHTML;
+            btn.disabled = false;
+        }
+    }
+
+    // Event listeners
+    document.getElementById('btn-guardar').addEventListener('click', actualizarCliente);
+    document.getElementById('btn-agregar-direccion').addEventListener('click', mostrarModalAgregarDireccion);
+    
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
+    
+    // Inicializar
+    cargarCliente();
+    cargarDirecciones();
+</script>
+</body>
+</html>

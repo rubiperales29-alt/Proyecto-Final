@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#5d1927",
+                    "background-light": "#f8f6f6",
+                    "background-dark": "#221014",
+                },
+                fontFamily: { "display": ["Plus Jakarta Sans"] },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<style>
+    /* Estilos para las notificaciones toast */
+    .toast-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        min-width: 280px;
+        max-width: 380px;
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.02);
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        transform: translateX(400px);
+        transition: transform 0.3s ease-out;
+        border-left: 4px solid;
+        pointer-events: auto;
+    }
+    .toast-notification.show {
+        transform: translateX(0);
+    }
+    .toast-notification.success {
+        border-left-color: #10b981;
+    }
+    .toast-notification.error {
+        border-left-color: #ef4444;
+    }
+    .toast-notification.warning {
+        border-left-color: #f59e0b;
+    }
+    .toast-icon {
+        flex-shrink: 0;
+    }
+    .toast-content {
+        flex: 1;
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+    .toast-close {
+        cursor: pointer;
+        color: #9ca3af;
+        transition: color 0.2s;
+    }
+    .toast-close:hover {
+        color: #4b5563;
+    }
+</style>
+<title>Eliminar Rol - Nonna DB</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display">
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-background-dark/40 backdrop-blur-sm px-4">
+    <div class="w-full max-w-md bg-white dark:bg-slate-900 rounded-xl shadow-2xl border-2 border-primary/20 overflow-hidden">
+        <div class="p-8 text-center">
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary mb-6">
+                <span class="material-symbols-outlined text-4xl font-bold">delete_forever</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-primary tracking-tight mb-3">¿ELIMINAR ROL?</h2>
+            <p class="text-slate-600 dark:text-slate-400 text-base leading-relaxed mb-6">
+                ¿Estás seguro de que deseas eliminar este rol? <br>
+                <span class="font-medium">Esta acción no se puede deshacer</span> y podría afectar a los usuarios asignados.
+            </p>
+            <div class="bg-primary/5 rounded-lg py-3 px-4 mb-8 border border-primary/10">
+                <p class="text-sm text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold">Rol a eliminar</p>
+                <p id="nombre-rol" class="text-xl font-bold text-slate-900 dark:text-slate-100">Cargando...</p>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button id="btn-eliminar" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 px-6 rounded-lg transition-all shadow-lg shadow-red-600/20 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-xl">delete</span>
+                    Sí, Eliminar Rol
+                </button>
+                <a href="roles.html" class="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold py-3.5 px-6 rounded-lg border border-slate-200 dark:border-slate-700 transition-all text-center">
+                    No, Cancelar
+                </a>
+            </div>
+        </div>
+        <div class="h-1.5 w-full bg-primary"></div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://98.92.235.60:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    // ---------- SISTEMA DE NOTIFICACIONES TOAST ----------
+    function showToast(message, type = 'info', duration = 4000) {
+        const toastContainer = document.getElementById('toast-container') || (() => {
+            const container = document.createElement('div');
+            container.id = 'toast-container';
+            container.style.position = 'fixed';
+            container.style.top = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '1000';
+            container.style.display = 'flex';
+            container.style.flexDirection = 'column';
+            container.style.gap = '10px';
+            document.body.appendChild(container);
+            return container;
+        })();
+
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${type}`;
+        
+        let icon = '';
+        if (type === 'success') icon = 'check_circle';
+        else if (type === 'error') icon = 'error';
+        else if (type === 'warning') icon = 'warning';
+        else icon = 'info';
+        
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <span class="material-symbols-outlined" style="color: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'}">${icon}</span>
+            </div>
+            <div class="toast-content">${message}</div>
+            <div class="toast-close">
+                <span class="material-symbols-outlined text-sm">close</span>
+            </div>
+        `;
+        
+        toastContainer.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 10);
+        
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        });
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, duration);
+    }
+
+    // Obtener ID del rol desde la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const rolId = urlParams.get('id');
+    if (!rolId) {
+        showToast('No se especificó qué rol eliminar.', 'error');
+        setTimeout(() => { window.location.href = 'roles.html'; }, 1500);
+    }
+
+    // Cargar datos del rol para mostrar su nombre
+    async function cargarRol() {
+        try {
+            const res = await fetch(`${API_BASE}/rol/${rolId}`, { headers: getHeaders() });
+            if (!res.ok) throw new Error(`Error ${res.status}`);
+            const rol = await res.json();
+            document.getElementById('nombre-rol').innerText = rol.descripcion || 'Rol sin nombre';
+        } catch (error) {
+            console.error(error);
+            document.getElementById('nombre-rol').innerText = 'Error al cargar datos';
+            showToast('No se pudo cargar la información del rol.', 'error');
+        }
+    }
+
+    // Eliminar rol
+    async function eliminarRol() {
+        const btn = document.getElementById('btn-eliminar');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Eliminando...';
+        btn.disabled = true;
+        
+        try {
+            const res = await fetch(`${API_BASE}/rol/${rolId}`, { 
+                method: 'DELETE', 
+                headers: getHeaders() 
+            });
+            
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Error al eliminar el rol');
+            }
+            
+            showToast('Rol eliminado correctamente', 'success');
+            setTimeout(() => {
+                window.location.href = 'roles.html';
+            }, 1500);
+        } catch (error) {
+            let errorMsg = error.message;
+            if (errorMsg.includes('foreign key') || errorMsg.includes('referenced')) {
+                errorMsg = 'No se puede eliminar este rol porque tiene usuarios asignados. Reasigna esos usuarios primero.';
+            }
+            showToast(`Error: ${errorMsg}`, 'error');
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }
+    }
+
+    // Evento del botón eliminar (sin confirm adicional)
+    document.getElementById('btn-eliminar').addEventListener('click', () => {
+        eliminarRol();
+    });
+
+    // Inicializar
+    cargarRol();
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Nonna - Gestión de Productos</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <!-- No cargamos Material Symbols para evitar problemas -->
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: { "primary": "#5d1927", "accent-pink": "#FEBDC6", "background-light": "#f8f6f6", "background-dark": "#1f1316" },
+          fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #febdc6; }
+  </style>
+</head>
+<body class="bg-accent-pink min-h-screen">
+  <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+      <main class="flex flex-1 justify-center py-8 px-4 sm:px-10 lg:px-20">
+        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 gap-6">
+          
+          <!-- ✅ Botón para volver al menú principal (CRUD's del Sistema) -->
+          <div class="flex items-center gap-2 mb-2">
+            <a href="index.html" class="flex items-center gap-1 text-primary font-semibold hover:underline transition-colors">
+              <span class="text-xl">←</span>
+              <span class="text-sm uppercase tracking-wide">CRUD's del Sistema</span>
+            </a>
+          </div>
+
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-col gap-1">
+              <h1 class="text-primary text-4xl font-black tracking-[-0.033em]">Gestión de Productos</h1>
+              <p class="text-primary/70 text-base font-medium">Control total del catálogo artesanal de Nonna</p>
+            </div>
+            <a href="producto_nuevo.html" class="flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-white text-sm font-bold shadow-lg hover:shadow-primary/20 transition-all active:scale-95">
+              <span>➕</span>
+              <span>Agregar Producto</span>
+            </a>
+          </div>
+          <div class="overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-xl">
+            <div class="w-full overflow-x-hidden">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-primary/5">
+                    <th class="px-6 py-4 text-primary text-xs font-extrabold uppercase tracking-wider">Producto</th>
+                    <th class="px-6 py-4 text-primary text-xs font-extrabold uppercase tracking-wider">Receta</th>
+                    <th class="px-6 py-4 text-primary text-xs font-extrabold uppercase tracking-wider text-right">Precio Unitario</th>
+                    <th class="px-6 py-4 text-primary text-xs font-extrabold uppercase tracking-wider text-center">Acciones</th>
+                  <tr>
+                </thead>
+                <tbody id="tabla-productos-body" class="divide-y divide-primary/5">
+                  <tr><td colspan="4" class="text-center py-10 text-primary/50">Cargando...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://3.15.13.161:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+      return {
+        'accept': 'application/json',
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    async function listarProductos() {
+      const res = await fetch(`${API_BASE}/producto/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function listarRecetas() {
+      const res = await fetch(`${API_BASE}/receta/recetas/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('Error al cargar recetas');
+      return res.json();
+    }
+
+    let recetasMap = {};
+
+    async function cargarRecetas() {
+      try {
+        const recetas = await listarRecetas();
+        recetasMap = {};
+        recetas.forEach(rec => {
+          recetasMap[rec.id_receta] = rec.descripcion || `Receta ${rec.id_receta}`;
+        });
+      } catch (error) {
+        console.error('Error cargando recetas:', error);
+      }
+    }
+
+    let todosProductos = [];
+
+    function renderizarProductos(productos) {
+      const tbody = document.getElementById('tabla-productos-body');
+      if (!productos.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-primary/50">No hay productos. ¡Agrega el primero!</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = '';
+      productos.forEach(prod => {
+        const id = prod.id_producto;
+        const nombreProducto = prod.descripcion || 'Sin nombre';
+        const precio = prod.precio_unitario ? `$${parseFloat(prod.precio_unitario).toFixed(2)}` : '$0.00';
+        const nombreReceta = recetasMap[prod.id_receta] || `Receta ID: ${prod.id_receta}`;
+        
+        const fila = `
+          <tr class="hover:bg-primary/[0.02] transition-colors group">
+            <td class="px-6 py-5">
+              <p class="text-primary font-bold text-sm">${escapeHtml(nombreProducto)}</p>
+            </td>
+            <td class="px-6 py-5">
+              <span class="text-primary text-xs font-extrabold uppercase bg-primary/10 px-2 py-1 rounded">${escapeHtml(nombreReceta)}</span>
+            </td>
+            <td class="px-6 py-5 text-right text-primary font-bold text-sm">${precio}</td>
+            <td class="px-6 py-5">
+              <div class="flex items-center justify-center gap-2">
+                <a href="producto_editar.html?id=${id}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all text-xl" title="Editar">✏️</a>
+                <a href="producto_eliminar.html?id=${id}" class="p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all text-xl" title="Eliminar">🗑️</a>
+              </div>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', fila);
+      });
+    }
+
+    async function cargarProductos() {
+      const tbody = document.getElementById('tabla-productos-body');
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10">Cargando...</td></tr>`;
+      try {
+        await cargarRecetas();
+        todosProductos = await listarProductos();
+        renderizarProductos(todosProductos);
+      } catch (error) {
+        console.error(error);
+        let mensaje = error.message.includes('401') ? 'Token inválido o expirado. Actualiza TOKEN.' : (error.message.includes('Failed to fetch') ? 'Error de CORS o conexión. Usa Live Server.' : error.message);
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${mensaje}</td></tr>`;
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+
+    cargarProductos();
+  </script>
+</body>
+</html>

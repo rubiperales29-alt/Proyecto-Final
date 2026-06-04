@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Gestión de Clientes - Nonna DB</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Playfair+Display:wght@700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#5D1927",
+                    "background-light": "#FEBDC6",
+                    "background-dark": "#2D0A11",
+                },
+                fontFamily: {
+                    display: ["Playfair Display", "serif"],
+                    sans: ["Inter", "sans-serif"],
+                },
+                borderRadius: { DEFAULT: "0.75rem" },
+            },
+        },
+    };
+</script>
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #5D192744; border-radius: 10px; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+    }
+</style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen font-sans transition-colors duration-300">
+<!-- Top Navigation Bar Begins-->
+<header class="w-full bg-[#f3dfe0] dark:bg-slate-900 border-b border-primary/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-6">
+        <div class="flex items-center gap-3">
+            <div class="bg-primary p-2 rounded-lg text-white">
+                <span class="material-symbols-outlined block text-2xl">bakery_dining</span>
+            </div>
+            <h1 class="text-primary text-xl font-bold tracking-tight">Nonna</h1>
+        </div>
+        <div class="h-8 w-[1px] bg-primary/20"></div>
+        <a href="index.html" class="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors duration-200">
+            <span class="material-symbols-outlined">arrow_back</span>
+            <span class="text-sm font-bold leading-normal">Menú de CRUDs</span>
+        </a>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+            <div class="text-right hidden sm:block">
+                <p id="textoUsuario" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Nombre de usuario</p>
+                <p id="textoRol" class="text-xs text-slate-500">Rol</p>
+            </div>
+        </div>
+        <button id="botonCerrarSesion" class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+            <span class="material-symbols-outlined text-xl">logout</span>
+            <span class="hidden sm:inline text-sm font-medium">Cerrar Sesión</span>
+        </button>
+    </div>
+</header>
+<script>
+    document.getElementById("textoUsuario").innerText = localStorage.getItem("usuario") || "Invitado";
+    document.getElementById("textoRol").innerText = localStorage.getItem("rol") || "Sin rol";
+    const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+    botonCerrarSesion.addEventListener("click", function () { localStorage.clear(); window.location.href = "registro.html"; });
+</script>
+<!-- Top Navigation Bar Ends-->
+<main class="max-w-7xl mx-auto px-6 lg:px-12 py-10">
+    <div class="mb-10">
+        <h1 class="text-4xl lg:text-5xl font-display font-bold text-primary dark:text-pink-100 mb-2">GESTIÓN DE CLIENTES</h1>
+        <p class="text-primary/70 dark:text-pink-200/60 font-medium">Administración de base de datos de usuarios registrados.</p>
+    </div>
+    <div class="flex flex-col md:flex-row gap-4 mb-8 items-center justify-between">
+        <div class="relative w-full md:w-96">
+            <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/50">search</span>
+            <input id="buscador" class="w-full pl-12 pr-4 py-3 bg-white/80 dark:bg-black/30 border-none rounded-2xl focus:ring-2 focus:ring-primary/40 transition-all text-primary dark:text-white placeholder:text-primary/40 shadow-sm" placeholder="Buscar por nombre o teléfono...">
+        </div>
+        <a href="cliente_nuevo.html" class="w-full md:w-auto flex items-center justify-center gap-2 bg-primary hover:bg-[#4A141F] text-white px-8 py-3 rounded-2xl shadow-xl hover:shadow-primary/20 transition-all font-semibold">
+            <span class="material-symbols-outlined">add</span>
+            Nuevo Cliente
+        </a>
+    </div>
+    <div class="bg-white dark:bg-neutral-900/80 rounded-3xl shadow-2xl overflow-hidden border border-white/50 dark:border-white/5 backdrop-blur-sm">
+        <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-primary/5 dark:bg-white/5 border-b border-primary/10 dark:border-white/10">
+                        <th class="px-6 py-5 text-sm font-bold text-primary dark:text-pink-200 tracking-wider uppercase">ID</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary dark:text-pink-200 tracking-wider uppercase">Nombre</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary dark:text-pink-200 tracking-wider uppercase">Apellido</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary dark:text-pink-200 tracking-wider uppercase">Teléfono</th>
+                        <th class="px-6 py-5 text-sm font-bold text-primary dark:text-pink-200 tracking-wider uppercase text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-clientes" class="divide-y divide-primary/5 dark:divide-white/5">
+                    <tr><td colspan="5" class="text-center py-10 text-primary/50">Cargando clientes...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="px-6 py-5 flex items-center justify-between border-t border-primary/10 dark:border-white/10 bg-primary/5 dark:bg-white/5">
+            <span id="total-registros" class="text-sm text-primary/70 dark:text-pink-200/50">Cargando...</span>
+        </div>
+    </div>
+</main>
+
+<script>
+    const API_BASE = 'http://98.92.235.60:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return { 'accept': 'application/json', 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json' };
+    }
+
+    async function listarClientes() {
+        const res = await fetch(`${API_BASE}/cliente/`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        return res.json();
+    }
+
+    let todosClientes = [];
+
+    function renderizarTabla(clientes) {
+        const tbody = document.getElementById('tabla-clientes');
+        if (!clientes.length) {
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-primary/50">No hay clientes. ¡Agrega el primero!</td></tr>`;
+            document.getElementById('total-registros').innerText = 'Mostrando 0 clientes';
+            return;
+        }
+        tbody.innerHTML = '';
+        clientes.forEach(cli => {
+            const fila = `
+                <tr class="hover:bg-primary/5 dark:hover:bg-white/5 transition-colors">
+                    <td class="px-6 py-4 text-primary dark:text-white font-mono font-medium">${cli.id_cliente}</td>
+                    <td class="px-6 py-4 text-neutral-700 dark:text-neutral-300">${escapeHtml(cli.nombre || '')}</td>
+                    <td class="px-6 py-4 text-neutral-700 dark:text-neutral-300">${escapeHtml(cli.apellido || '')}</td>
+                    <td class="px-6 py-4 text-neutral-700 dark:text-neutral-300 font-mono">${escapeHtml(cli.telefono || '')}</td>
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex justify-center gap-2">
+                            <a href="cliente_direcciones.html?id=${cli.id_cliente}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Ver direcciones">
+                                <span class="material-symbols-outlined text-xl">location_on</span>
+                            </a>
+                            <a href="cliente_editar.html?id=${cli.id_cliente}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+                                <span class="material-symbols-outlined text-xl">edit</span>
+                            </a>
+                            <a href="cliente_eliminar.html?id=${cli.id_cliente}" class="p-2 text-primary/40 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                                <span class="material-symbols-outlined text-xl">delete</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', fila);
+        });
+        document.getElementById('total-registros').innerText = `Mostrando ${clientes.length} clientes`;
+    }
+
+    async function cargarClientes() {
+        const tbody = document.getElementById('tabla-clientes');
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-primary/50">Cargando...</td></tr>`;
+        try {
+            todosClientes = await listarClientes();
+            renderizarTabla(todosClientes);
+        } catch (error) {
+            let mensaje = error.message.includes('401') ? 'Token inválido.' : (error.message.includes('Failed to fetch') ? 'Error de conexión.' : error.message);
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-red-500">Error: ${mensaje}</td></tr>`;
+        }
+    }
+
+    const buscador = document.getElementById('buscador');
+    if (buscador) {
+        buscador.addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase();
+            if (!texto.trim()) return renderizarTabla(todosClientes);
+            const filtrados = todosClientes.filter(c => (c.nombre?.toLowerCase().includes(texto)) || (c.apellido?.toLowerCase().includes(texto)) || (c.telefono?.toLowerCase().includes(texto)));
+            renderizarTabla(filtrados);
+        });
+    }
+
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;')); }
+    cargarClientes();
+</script>
+</body>
+</html>

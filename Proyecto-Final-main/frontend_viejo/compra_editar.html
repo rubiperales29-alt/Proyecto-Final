@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Compra - Nonna</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#5d1927",
+                        "brand-pink": "#FEBDC6",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#1f1316",
+                    },
+                    fontFamily: { "display": ["Montserrat", "sans-serif"] },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { background-color: #FEBDC6; font-family: 'Montserrat', sans-serif; }
+        .modal-mensaje { transition: opacity 0.3s ease, visibility 0.3s ease; }
+    </style>
+</head>
+<body class="min-h-screen p-4 flex items-center justify-center">
+    <div class="w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-6 border-b border-primary/10 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold text-primary">Editar Compra</h1>
+                <p class="text-slate-500 text-sm">Modifica la compra (proveedor, fecha, productos)</p>
+            </div>
+            <a href="compras.html" class="text-primary hover:bg-primary/10 p-2 rounded-full transition">
+                <span class="material-symbols-outlined">close</span>
+            </a>
+        </div>
+        <div class="p-6">
+            <form id="form-compra" class="space-y-6">
+                <!-- ID y proveedor -->
+                <div>
+                    <label class="block text-sm font-bold text-primary mb-1">ID Compra</label>
+                    <input id="id_compra" type="text" class="w-full p-3 bg-slate-100 border border-primary/20 rounded-xl text-slate-500" readonly>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-primary mb-1">Proveedor *</label>
+                    <select id="id_proveedor" class="w-full p-3 border border-primary/20 rounded-xl focus:ring-primary" required>
+                        <option value="">Cargando proveedores...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-primary mb-1">Fecha de compra *</label>
+                    <input type="datetime-local" id="fecha" class="w-full p-3 border border-primary/20 rounded-xl focus:ring-primary" required>
+                </div>
+                <!-- Productos -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="block text-sm font-bold text-primary">Productos / Materias primas</label>
+                        <button type="button" id="btn-agregar-producto" class="text-sm bg-primary/10 text-primary px-3 py-1 rounded-full font-semibold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-base">add</span> Agregar producto
+                        </button>
+                    </div>
+                    <div id="productos-container" class="space-y-3">
+                        <div class="text-center text-slate-400 py-4">Cargando productos...</div>
+                    </div>
+                </div>
+                <!-- Botones -->
+                <div class="flex gap-4 pt-4">
+                    <button type="submit" id="btn-submit" class="flex-1 bg-primary text-white font-bold py-3 rounded-xl hover:bg-primary/90 transition flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined">save</span>
+                        Actualizar Compra
+                    </button>
+                    <a href="compras.html" class="flex-1 border-2 border-primary text-primary font-bold py-3 rounded-xl hover:bg-primary/5 text-center">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modales (igual que antes) -->
+    <div id="modal-exito" class="fixed inset-0 flex items-center justify-center z-50 hidden modal-mensaje">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 text-center shadow-2xl">
+            <span class="material-symbols-outlined text-green-600 text-5xl mb-2">check_circle</span>
+            <h3 class="text-xl font-bold text-slate-900">¡Compra actualizada!</h3>
+            <p class="text-slate-500 mt-2">Los cambios se han guardado correctamente.</p>
+            <button id="btn-cerrar-exito" class="mt-6 w-full bg-primary text-white py-2 rounded-xl font-bold">Continuar</button>
+        </div>
+    </div>
+    <div id="modal-error" class="fixed inset-0 flex items-center justify-center z-50 hidden modal-mensaje">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 text-center shadow-2xl">
+            <span class="material-symbols-outlined text-red-600 text-5xl mb-2">error</span>
+            <h3 class="text-xl font-bold text-slate-900">Error</h3>
+            <p id="error-mensaje" class="text-slate-500 mt-2"></p>
+            <button id="btn-cerrar-error" class="mt-6 w-full bg-primary text-white py-2 rounded-xl font-bold">Aceptar</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://3.15.13.161:8000/api';
+        const TOKEN = localStorage.token;
+        if (!TOKEN) {
+            alert('No hay sesión activa. Redirigiendo...');
+            window.location.href = 'index.html';
+        }
+
+        function getHeaders() {
+            return {
+                'accept': 'application/json',
+                'Authorization': `Bearer ${TOKEN}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const compraId = urlParams.get('id');
+        if (!compraId) {
+            mostrarError('No se especificó la compra a editar', true);
+        }
+
+        let proveedores = [];
+        let materiasPrimas = [];
+        let unidadesMap = {};
+        let detalles = []; // { id_materia, cantidad, nombre, unidad }
+
+        // Elementos
+        const proveedorSelect = document.getElementById('id_proveedor');
+        const fechaInput = document.getElementById('fecha');
+        const container = document.getElementById('productos-container');
+
+        function mostrarExito(callback) {
+            const modal = document.getElementById('modal-exito');
+            modal.classList.remove('hidden');
+            document.getElementById('btn-cerrar-exito').onclick = () => {
+                modal.classList.add('hidden');
+                if (callback) callback();
+            };
+        }
+        function mostrarError(mensaje, redirigir = false) {
+            const modal = document.getElementById('modal-error');
+            document.getElementById('error-mensaje').innerText = mensaje;
+            modal.classList.remove('hidden');
+            document.getElementById('btn-cerrar-error').onclick = () => {
+                modal.classList.add('hidden');
+                if (redirigir) window.location.href = 'compras.html';
+            };
+        }
+
+        // Cargar unidades
+        async function cargarUnidades() {
+            try {
+                const res = await fetch(`${API_BASE}/unidad_medida/`, { headers: getHeaders() });
+                if (res.ok) {
+                    const unidades = await res.json();
+                    unidadesMap = {};
+                    unidades.forEach(u => {
+                        const texto = u.descripcion ? `${u.descripcion} (${u.abreviatura})` : u.abreviatura || `Unidad ${u.id_unidad}`;
+                        unidadesMap[u.id_unidad] = texto;
+                    });
+                }
+            } catch(e) { console.error('Error cargando unidades', e); }
+        }
+
+        async function cargarProveedores() {
+            try {
+                const res = await fetch(`${API_BASE}/proveedor/`, { headers: getHeaders() });
+                if (!res.ok) throw new Error();
+                proveedores = await res.json();
+                proveedorSelect.innerHTML = '<option value="">Seleccione un proveedor</option>';
+                proveedores.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id_proveedor;
+                    opt.textContent = p.descripcion || `Proveedor ${p.id_proveedor}`;
+                    proveedorSelect.appendChild(opt);
+                });
+            } catch(e) {
+                proveedorSelect.innerHTML = '<option value="">Error al cargar proveedores</option>';
+                mostrarError('No se pudieron cargar los proveedores');
+            }
+        }
+
+        async function cargarMaterias() {
+            try {
+                const res = await fetch(`${API_BASE}/materia_prima/`, { headers: getHeaders() });
+                if (!res.ok) throw new Error();
+                materiasPrimas = await res.json();
+            } catch(e) {
+                mostrarError('No se pudieron cargar las materias primas');
+            }
+        }
+
+        // Cargar datos de la compra (cabecera)
+        async function cargarCompra() {
+            try {
+                const res = await fetch(`${API_BASE}/compra/${compraId}`, { headers: getHeaders() });
+                if (!res.ok) throw new Error(`Error ${res.status}`);
+                const compra = await res.json();
+                document.getElementById('id_compra').value = compra.id_compra;
+                proveedorSelect.value = compra.id_proveedor;
+                if (compra.fecha) {
+                    const fecha = new Date(compra.fecha);
+                    const year = fecha.getFullYear();
+                    const month = String(fecha.getMonth() + 1).padStart(2, '0');
+                    const day = String(fecha.getDate()).padStart(2, '0');
+                    const hours = String(fecha.getHours()).padStart(2, '0');
+                    const minutes = String(fecha.getMinutes()).padStart(2, '0');
+                    fechaInput.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+                }
+            } catch (error) {
+                mostrarError('Error al cargar la compra: ' + error.message, true);
+                throw error;
+            }
+        }
+
+        // Cargar detalles de la compra (endpoint hipotético)
+        async function cargarDetalles() {
+            try {
+                let res = await fetch(`${API_BASE}/compra_detalle/?id_compra=${compraId}`, { headers: getHeaders() });
+                if (!res.ok) {
+                    res = await fetch(`${API_BASE}/compra/${compraId}/detalle`, { headers: getHeaders() });
+                }
+                if (!res.ok) {
+                    detalles = [];
+                    renderizarProductos();
+                    return;
+                }
+                const detallesData = await res.json();
+                detalles = detallesData.map(d => {
+                    const materia = materiasPrimas.find(m => m.id_materia === d.id_materia);
+                    return {
+                        id_materia: d.id_materia,
+                        cantidad: d.cantidad,
+                        nombre: materia ? materia.descripcion : `ID ${d.id_materia}`,
+                        unidad: materia ? unidadesMap[materia.id_unidad] : ''
+                    };
+                });
+                renderizarProductos();
+            } catch (error) {
+                console.warn('No se pudieron cargar los detalles. Se iniciará con lista vacía.', error);
+                detalles = [];
+                renderizarProductos();
+            }
+        }
+
+        function renderizarProductos() {
+            if (detalles.length === 0) {
+                container.innerHTML = '<div class="text-center text-slate-400 py-4">No hay productos agregados. Haz clic en "Agregar producto".</div>';
+                return;
+            }
+            container.innerHTML = '';
+            detalles.forEach((det, idx) => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-3 bg-slate-50 rounded-xl';
+                div.innerHTML = `
+                    <div class="flex-1">
+                        <span class="font-bold">${escapeHtml(det.nombre)}</span>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-xs text-slate-500">Cantidad:</span>
+                            <input type="number" class="input-cantidad border rounded px-2 py-1 w-24" value="${det.cantidad}" data-idx="${idx}" step="any" min="0">
+                            <span class="text-xs text-slate-500">${det.unidad}</span>
+                        </div>
+                    </div>
+                    <button type="button" class="text-red-500 hover:bg-red-50 p-1 rounded-full eliminar-producto" data-idx="${idx}">
+                        <span class="material-symbols-outlined">delete</span>
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+            // Eventos para modificar cantidad
+            document.querySelectorAll('.input-cantidad').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const idx = parseInt(input.dataset.idx);
+                    let newVal = parseFloat(input.value);
+                    if (isNaN(newVal) || newVal < 0) newVal = 0;
+                    detalles[idx].cantidad = newVal;
+                });
+            });
+            // Eventos eliminar
+            document.querySelectorAll('.eliminar-producto').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const idx = parseInt(btn.dataset.idx);
+                    detalles.splice(idx, 1);
+                    renderizarProductos();
+                });
+            });
+        }
+
+        // Modal agregar producto (con unidad)
+        function mostrarModalAgregarProducto() {
+            if (materiasPrimas.length === 0) {
+                mostrarError('No hay materias primas registradas.');
+                return;
+            }
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+                    <h3 class="text-xl font-bold mb-4">Agregar producto</h3>
+                    <div class="space-y-4">
+                        <select id="select-materia" class="w-full p-3 border rounded-xl">
+                            <option value="">Seleccione materia prima</option>
+                            ${materiasPrimas.map(mp => `<option value="${mp.id_materia}" data-unidad="${unidadesMap[mp.id_unidad] || ''}" data-nombre="${escapeHtml(mp.descripcion)}">${escapeHtml(mp.descripcion)} (${unidadesMap[mp.id_unidad] || 'unidad'})</option>`).join('')}
+                        </select>
+                        <input type="number" id="cantidad-producto" class="w-full p-3 border rounded-xl" placeholder="Cantidad" min="1" step="1" value="1">
+                        <div class="flex gap-3 justify-end">
+                            <button id="cancelar-producto" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                            <button id="confirmar-producto" class="px-4 py-2 bg-primary text-white rounded-xl">Agregar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.querySelector('#cancelar-producto').onclick = () => modal.remove();
+            modal.querySelector('#confirmar-producto').onclick = () => {
+                const select = modal.querySelector('#select-materia');
+                const id_materia = parseInt(select.value);
+                if (!id_materia) { mostrarError('Seleccione una materia prima'); return; }
+                const cantidad = parseInt(modal.querySelector('#cantidad-producto').value);
+                if (isNaN(cantidad) || cantidad < 1) { mostrarError('Cantidad inválida'); return; }
+                const selectedOption = select.options[select.selectedIndex];
+                const nombre = selectedOption.getAttribute('data-nombre');
+                const unidad = selectedOption.getAttribute('data-unidad');
+                const existente = detalles.find(d => d.id_materia === id_materia);
+                if (existente) {
+                    existente.cantidad += cantidad;
+                } else {
+                    detalles.push({ id_materia, cantidad, nombre, unidad });
+                }
+                renderizarProductos();
+                modal.remove();
+            };
+        }
+
+        // Actualizar compra en API
+        async function actualizarCompra(datos) {
+            const res = await fetch(`${API_BASE}/compra/${compraId}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(datos)
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Error al actualizar compra');
+            }
+            return res.json();
+        }
+
+        // Envío del formulario
+        document.getElementById('form-compra').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id_proveedor = parseInt(proveedorSelect.value);
+            if (!id_proveedor) {
+                mostrarError('Seleccione un proveedor');
+                return;
+            }
+            let fecha = fechaInput.value;
+            if (!fecha) {
+                mostrarError('Ingrese la fecha de compra');
+                return;
+            }
+            fecha = new Date(fecha).toISOString();
+            if (detalles.length === 0) {
+                mostrarError('Debe tener al menos un producto');
+                return;
+            }
+            const detalle = detalles.map(d => ({
+                id_materia: d.id_materia,
+                cantidad: d.cantidad
+            }));
+            const payload = { id_proveedor, fecha, detalle };
+
+            const btn = document.getElementById('btn-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Actualizando...';
+            btn.disabled = true;
+
+            try {
+                await actualizarCompra(payload);
+                mostrarExito(() => {
+                    window.location.href = 'compras.html';
+                });
+            } catch (error) {
+                let msg = error.message;
+                if (msg.includes('duplicate')) msg = 'Datos duplicados.';
+                mostrarError('Error al actualizar: ' + msg);
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        });
+
+        document.getElementById('btn-agregar-producto').addEventListener('click', mostrarModalAgregarProducto);
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+        }
+
+        async function init() {
+            await cargarUnidades();
+            await Promise.all([cargarProveedores(), cargarMaterias()]);
+            await cargarCompra();
+            await cargarDetalles();
+        }
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Nonna - Gestión de Recetas</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "primary": "#5d1927",
+                    "background-light": "#f8f6f6",
+                    "background-dark": "#1f1316",
+                    "accent-pink": "#FEBDC6",
+                },
+                fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #FEBDC6; }
+</style>
+</head>
+<body class="bg-accent-pink min-h-screen font-display">
+<div class="flex flex-col min-h-screen w-full max-w-[1920px] mx-auto overflow-x-hidden">
+    <main class="flex-1 px-6 md:px-20 py-10">
+        <div class="max-w-6xl mx-auto space-y-8">
+            <!-- ✅ Botón para volver al menú principal (CRUD's del Sistema) -->
+            <div class="flex items-center gap-2 mb-2">
+                <a href="index.html" class="flex items-center gap-1 text-primary font-semibold hover:underline transition-colors">
+                    <span class="text-xl">←</span>
+                    <span class="text-sm uppercase tracking-wide">CRUD's del Sistema</span>
+                </a>
+            </div>
+
+            <!-- Title and Actions -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div class="space-y-1">
+                    <h2 class="text-primary text-4xl font-black tracking-tight">Gestión de Recetas</h2>
+                    <p class="text-primary/70 text-lg">Control de recetas y materias primas para producción.</p>
+                </div>
+                <a href="receta_nuevo.html" class="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all transform active:scale-95">
+                    <span class="material-symbols-outlined">add_box</span>
+                    <span>Agregar Receta</span>
+                </a>
+            </div>
+            <!-- Search -->
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-primary/5">
+                <div class="relative w-full max-w-md">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40">search</span>
+                    <input id="buscador" class="w-full pl-12 pr-4 py-3 bg-primary/5 border-none rounded-xl focus:ring-2 focus:ring-primary/20 text-primary placeholder:text-primary/40 font-medium" placeholder="Buscar recetas...">
+                </div>
+            </div>
+            <!-- Table -->
+            <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-primary/5">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-primary/5">
+                                <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider">RECETA (Descripción)</th>
+                                <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider text-right">ACCIONES</th>
+                             </tr>
+                        </thead>
+                        <tbody id="tabla-recetas" class="divide-y divide-primary/5">
+                            <tr><td colspan="2" class="text-center py-10 text-primary/50">Cargando recetas...</td></tr>
+                        </tbody>
+                     </table>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer class="px-20 py-8 bg-primary/10 mt-auto">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-primary/60 text-xs font-bold tracking-widest uppercase">©  Nonna </p>
+        </div>
+    </footer>
+</div>
+
+<script>
+    const API_BASE = 'http://3.15.13.161:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    async function listarRecetas() {
+        const res = await fetch(`${API_BASE}/receta/recetas/`, { headers: getHeaders() });
+        if (!res.ok) throw new Error(`Error ${res.status}`);
+        return res.json();
+    }
+
+    let todasRecetas = [];
+
+    function renderizarTabla(recetas) {
+        const tbody = document.getElementById('tabla-recetas');
+        if (!recetas.length) {
+            tbody.innerHTML = `<td><td colspan="2" class="text-center py-10 text-primary/50">No hay recetas. ¡Agrega la primera!</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = '';
+        recetas.forEach(rec => {
+            const fila = `
+                <tr class="hover:bg-primary/[0.02] transition-colors group">
+                    <td class="px-8 py-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+                                <span class="material-symbols-outlined text-primary text-2xl">restaurant</span>
+                            </div>
+                            <span class="text-primary font-bold text-lg">${escapeHtml(rec.descripcion)}</span>
+                        </div>
+                    </td>
+                    <td class="px-8 py-6">
+                        <div class="flex items-center justify-end gap-2">
+                            <button class="btn-ingredientes p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" data-id="${rec.id_receta}" title="Ver Ingredientes">
+                                <span class="material-symbols-outlined">flatware</span>
+                            </button>
+                            <a href="receta_editar.html?id=${rec.id_receta}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+                                <span class="material-symbols-outlined">edit</span>
+                            </a>
+                            <a href="receta_eliminar.html?id=${rec.id_receta}" class="p-2 text-primary/40 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" title="Eliminar">
+                                <span class="material-symbols-outlined">delete</span>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            tbody.insertAdjacentHTML('beforeend', fila);
+        });
+        // Evento para botones de ver ingredientes (opcional, por ahora solo alert)
+      document.querySelectorAll('.btn-ingredientes').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        window.location.href = `receta_detalle.html?id=${id}`;
+    });
+});
+    }
+
+    async function cargarRecetas() {
+        const tbody = document.getElementById('tabla-recetas');
+        tbody.innerHTML = `<td><td colspan="2" class="text-center py-10 text-primary/50">Cargando...</td></tr>`;
+        try {
+            todasRecetas = await listarRecetas();
+            renderizarTabla(todasRecetas);
+        } catch (error) {
+            console.error(error);
+            let mensaje = error.message.includes('401') ? 'Token inválido. Actualiza TOKEN.' : (error.message.includes('Failed to fetch') ? 'Error de CORS o conexión.' : error.message);
+            tbody.innerHTML = `<tr><td colspan="2" class="text-center py-10 text-red-500">Error: ${mensaje}</td></tr>`;
+        }
+    }
+
+    const buscador = document.getElementById('buscador');
+    if (buscador) {
+        buscador.addEventListener('input', (e) => {
+            const texto = e.target.value.toLowerCase();
+            if (!texto.trim()) return renderizarTabla(todasRecetas);
+            const filtradas = todasRecetas.filter(r => r.descripcion?.toLowerCase().includes(texto));
+            renderizarTabla(filtradas);
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+
+    cargarRecetas();
+</script>
+</body>
+</html>

@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&amp;family=Montserrat:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<script>
+tailwind.config = {
+    darkMode: "class",
+    theme: {
+        extend: {
+            colors: {
+                brand: {
+                    primary: '#5D1927',
+                    secondary: '#FEBDC6',
+                    accent: '#F43F5E'
+                }
+            },
+            borderRadius: {
+                DEFAULT: "0.25rem",
+                lg: "0.5rem",
+                xl: "0.75rem",
+                full: "9999px"
+            },
+            fontFamily: {
+                headline: ["Public Sans", "sans-serif"],
+                body: ["Public Sans", "sans-serif"]
+            }
+        },
+    },
+}
+</script>
+
+<style>
+body {
+    background-color: #FEBDC6;
+    font-family: 'Public Sans', sans-serif;
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.modal-overlay {
+    background-color: rgba(0,0,0,0.5);
+    backdrop-filter: blur(2px);
+}
+
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    min-width: 280px;
+    max-width: 380px;
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    transform: translateX(400px);
+    transition: transform 0.3s ease-out;
+    border-left: 4px solid;
+    pointer-events: auto;
+}
+
+.toast-notification.show {
+    transform: translateX(0);
+}
+
+.toast-notification.success {
+    border-left-color: #10b981;
+}
+
+.toast-notification.error {
+    border-left-color: #ef4444;
+}
+
+.toast-notification.warning {
+    border-left-color: #f59e0b;
+}
+
+.toast-notification.info {
+    border-left-color: #3b82f6;
+}
+
+.toast-icon {
+    flex-shrink: 0;
+}
+
+.toast-content {
+    flex: 1;
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
+.toast-close {
+    cursor: pointer;
+    color: #9ca3af;
+    transition: color 0.2s;
+}
+
+.toast-close:hover {
+    color: #4b5563;
+}
+
+.cotizacion-hint {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8">
+
+<main class="w-full max-w-7xl bg-white/40 backdrop-blur-xl rounded-[2rem] shadow-2xl border border-white/50 flex flex-col md:flex-row overflow-hidden">
+
+    <div class="flex-1 h-full overflow-y-auto p-6 md:p-10">
+        <header class="mb-6">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-brand-primary tracking-tight">
+                Registrar Nuevo Pedido
+            </h1>
+            <p class="text-brand-primary/60 mt-2 font-medium">
+                Complete los detalles para procesar la nueva orden artesanal.
+            </p>
+        </header>
+
+        <form id="form-pedido" class="space-y-6">
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100/50">
+                <div class="flex flex-wrap items-end gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Cliente *</label>
+                        <select id="id_cliente" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" required>
+                            <option value="">Cargando clientes...</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="btn-nuevo-cliente" class="px-4 py-3 bg-brand-primary/10 text-brand-primary rounded-xl font-bold hover:bg-brand-primary/20 transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">person_add</span>
+                        Nuevo Cliente
+                    </button>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-end gap-4">
+                    <div class="flex-1 min-w-[200px]">
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Dirección *</label>
+                        <select id="id_direccion" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" required disabled>
+                            <option value="">Primero seleccione un cliente</option>
+                        </select>
+                    </div>
+
+                    <button type="button" id="btn-nueva-direccion" class="px-4 py-3 bg-brand-primary/10 text-brand-primary rounded-xl font-bold hover:bg-brand-primary/20 transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-lg">add_location</span>
+                        Nueva Dirección
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Fecha de Entrega *</label>
+                        <input id="fecha_entrega" type="date" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Estado *</label>
+                        <select id="id_estado" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" required>
+                            <option value="">Cargando estados...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Tipo de entrega *</label>
+                        <select id="tipo_entrega" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" required>
+                            <option value="true">A domicilio</option>
+                            <option value="false">Recoger en tienda</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-zinc-700 mb-1">Precio de envío</label>
+                        <input id="precio_envio" type="number" value="0" min="0" step="0.01" class="w-full px-4 py-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100/50">
+                <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
+                    <h2 class="text-xl font-bold text-zinc-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-brand-accent">cake</span>
+                        Productos del pedido
+                    </h2>
+
+                    <button type="button" id="btn-agregar-producto" class="text-sm font-bold text-brand-accent hover:bg-rose-50 px-4 py-2 rounded-xl transition-colors flex items-center gap-1">
+                        ➕ Agregar producto
+                    </button>
+                </div>
+
+                <div class="mb-4 text-sm text-zinc-600 bg-zinc-50 rounded-xl p-4">
+                    <p><strong>Producto:</strong> pastel o artículo que se incluirá en el pedido.</p>
+                    <p><strong>Cantidad:</strong> número de unidades solicitadas.</p>
+                    <p><strong>Precio de diseño:</strong> costo extra por decoración o personalización.</p>
+                </div>
+
+                <div id="productos-container" class="space-y-3 max-h-80 overflow-y-auto">
+                    <div class="text-center text-slate-400 py-4">
+                        No hay productos agregados. Presione "Agregar producto".
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-rose-100/50">
+                <label class="block text-sm font-bold text-zinc-700 mb-2">Notas y Comentarios del Pedido</label>
+                <textarea id="comentario" class="w-full p-3 bg-zinc-50 border-none rounded-xl focus:ring-2 focus:ring-brand-primary/20" placeholder="Instrucciones especiales..." rows="2"></textarea>
+            </div>
+        </form>
+    </div>
+
+    <div class="w-full md:w-96 bg-zinc-50/80 border-l border-white/50 p-6 md:p-8 flex flex-col justify-between">
+        <div>
+            <h3 class="text-2xl font-bold text-brand-primary mb-4">Resumen Financiero</h3>
+
+            <div class="space-y-3">
+                <div class="flex justify-between text-lg">
+                    <span class="text-zinc-500 font-medium">Subtotal</span>
+                    <span id="subtotal" class="text-zinc-800 font-bold">$0.00</span>
+                </div>
+
+                <div class="flex justify-between text-lg">
+                    <span class="text-zinc-500 font-medium">Envío</span>
+                    <span id="envio" class="text-zinc-800 font-bold">$0.00</span>
+                </div>
+
+                <div class="pt-4 border-t border-zinc-200 flex justify-between items-center">
+                    <span class="text-xl font-extrabold text-zinc-800">Total</span>
+                    <span id="total" class="text-3xl font-extrabold text-brand-primary">$0.00</span>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 bg-brand-primary/5 rounded-2xl border border-brand-primary/10">
+                <div class="flex gap-3 items-start">
+                    <div class="bg-brand-primary text-white p-2 rounded-xl">
+                        <span class="material-symbols-outlined">receipt_long</span>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-brand-primary">Cotización automática</h4>
+                        <p class="text-xs text-brand-primary/70">
+                            Subtotal = suma de (precio unitario × cantidad) + precio de diseño de cada producto.
+                            Luego se agrega el precio de envío para calcular el total.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-3 mt-6">
+            <button type="submit" form="form-pedido" id="btn-submit" class="w-full py-4 bg-brand-primary text-white rounded-xl font-bold text-lg shadow-xl hover:scale-[1.01] active:scale-95 transition-all flex items-center justify-center gap-2">
+                ✅ Crear Pedido
+            </button>
+
+            <a href="pedidos.html" class="w-full py-4 bg-white text-zinc-500 rounded-xl font-bold text-lg border border-zinc-200 hover:bg-zinc-100 transition-colors flex items-center justify-center gap-2">
+                ❌ Cancelar
+            </a>
+        </div>
+    </div>
+</main>
+
+<div id="modal-cliente" class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-brand-primary mb-4">Nuevo Cliente</h3>
+
+        <div class="space-y-3">
+            <input id="new_nombre" class="w-full p-3 border rounded-xl" placeholder="Nombre *">
+            <input id="new_apellido" class="w-full p-3 border rounded-xl" placeholder="Apellido *">
+            <input id="new_telefono" class="w-full p-3 border rounded-xl" placeholder="Teléfono">
+        </div>
+
+        <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelar-modal-cliente" class="px-4 py-2 border rounded-xl">Cancelar</button>
+            <button id="guardar-cliente" class="px-4 py-2 bg-brand-primary text-white rounded-xl">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-direccion" class="fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6">
+        <h3 class="text-xl font-bold text-brand-primary mb-4">Nueva Dirección</h3>
+
+        <input id="new_descripcion" class="w-full p-3 border rounded-xl" placeholder="Descripción (ej. Calle, número, colonia)">
+
+        <div class="flex justify-end gap-3 mt-6">
+            <button id="cancelar-modal-direccion" class="px-4 py-2 border rounded-xl">Cancelar</button>
+            <button id="guardar-direccion" class="px-4 py-2 bg-brand-primary text-white rounded-xl">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_BASE = 'http://98.92.235.60:8000/api';
+const TOKEN = localStorage.token;
+
+function getHeaders() {
+    return {
+        'accept': 'application/json',
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+    };
+}
+
+function escapeHtml(value) {
+    if (value === null || value === undefined) return '';
+
+    return String(value).replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+    }[m]));
+}
+
+function getErrorMessage(errorData, fallback = 'Error inesperado') {
+    if (!errorData) return fallback;
+
+    if (typeof errorData.detail === 'string') {
+        return errorData.detail;
+    }
+
+    if (Array.isArray(errorData.detail)) {
+        return errorData.detail
+            .map(e => `${Array.isArray(e.loc) ? e.loc.join('.') : ''}: ${e.msg}`)
+            .join('\n');
+    }
+
+    return errorData.message || fallback;
+}
+
+async function parseErrorResponse(res, fallback) {
+    try {
+        const data = await res.json();
+        return getErrorMessage(data, fallback);
+    } catch (_) {
+        return fallback;
+    }
+}
+
+function showToast(message, type = 'info', duration = 4000) {
+    const toastContainer = document.getElementById('toast-container') || (() => {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position:fixed; top:20px; right:20px; z-index:1000; display:flex; flex-direction:column; gap:10px;';
+        document.body.appendChild(container);
+        return container;
+    })();
+
+    const toast = document.createElement('div');
+    toast.className = `toast-notification ${type}`;
+
+    let icon = 'info';
+    if (type === 'success') icon = 'check_circle';
+    else if (type === 'error') icon = 'error';
+    else if (type === 'warning') icon = 'warning';
+
+    const iconColor =
+        type === 'success' ? '#10b981' :
+        type === 'error' ? '#ef4444' :
+        type === 'warning' ? '#f59e0b' :
+        '#3b82f6';
+
+    toast.innerHTML = `
+        <div class="toast-icon">
+            <span class="material-symbols-outlined" style="color:${iconColor}">${icon}</span>
+        </div>
+        <div class="toast-content whitespace-pre-line">${escapeHtml(message)}</div>
+        <div class="toast-close">
+            <span class="material-symbols-outlined text-sm">close</span>
+        </div>
+    `;
+
+    toastContainer.appendChild(toast);
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    toast.querySelector('.toast-close').onclick = () => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    };
+
+    setTimeout(() => {
+        if (toast.parentNode) {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, duration);
+}
+
+let clientes = [];
+let todasDirecciones = [];
+let productosCatalogo = [];
+let productosPedido = [];
+
+const clienteSelect = document.getElementById('id_cliente');
+const direccionSelect = document.getElementById('id_direccion');
+const estadoSelect = document.getElementById('id_estado');
+const productosContainer = document.getElementById('productos-container');
+const subtotalSpan = document.getElementById('subtotal');
+const totalSpan = document.getElementById('total');
+const precioEnvioInput = document.getElementById('precio_envio');
+
+function getParameterByName(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+async function cargarClientes() {
+    try {
+        const res = await fetch(`${API_BASE}/cliente/`, {
+            headers: getHeaders()
+        });
+
+        if (!res.ok) {
+            throw new Error(await parseErrorResponse(res, 'Error al cargar clientes'));
+        }
+
+        clientes = await res.json();
+
+        clienteSelect.innerHTML = '<option value="">Seleccione un cliente</option>';
+
+        clientes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id_cliente;
+            opt.textContent = `${c.nombre || ''} ${c.apellido || ''}`.trim() || `Cliente ${c.id_cliente}`;
+            clienteSelect.appendChild(opt);
+        });
+
+    } catch (e) {
+        clienteSelect.innerHTML = '<option value="">Error al cargar clientes</option>';
+        showToast('Error al cargar clientes: ' + e.message, 'error');
+    }
+}
+
+async function cargarTodasDirecciones() {
+    try {
+        const res = await fetch(`${API_BASE}/direccion/`, {
+            headers: getHeaders()
+        });
+
+        if (!res.ok) {
+            throw new Error(await parseErrorResponse(res, 'Error al cargar direcciones'));
+        }
+
+        todasDirecciones = await res.json();
+
+    } catch (e) {
+        todasDirecciones = [];
+        showToast('Error al cargar direcciones: ' + e.message, 'error');
+    }
+}
+
+function filtrarDireccionesPorCliente(idCliente) {
+    const filtradas = todasDirecciones.filter(d => String(d.id_cliente) === String(idCliente));
+
+    direccionSelect.innerHTML = '<option value="">Seleccione una dirección</option>';
+
+    filtradas.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id_direccion;
+        opt.textContent = d.descripcion || `Dirección ${d.id_direccion}`;
+        direccionSelect.appendChild(opt);
+    });
+
+    if (filtradas.length === 0) {
+        direccionSelect.innerHTML = '<option value="">No hay direcciones para este cliente</option>';
+    }
+
+    direccionSelect.disabled = false;
+}
+
+async function cargarEstados() {
+    try {
+        const res = await fetch(`${API_BASE}/estado/`, {
+            headers: getHeaders()
+        });
+
+        if (!res.ok) {
+            throw new Error(await parseErrorResponse(res, 'Error al cargar estados'));
+        }
+
+        const estados = await res.json();
+
+        estadoSelect.innerHTML = '<option value="">Seleccione un estado</option>';
+
+        estados.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id_estado;
+            opt.textContent = e.descripcion;
+            estadoSelect.appendChild(opt);
+        });
+
+    } catch (e) {
+        showToast('Error al cargar estados. Usando valores de respaldo.', 'warning');
+
+        const fallback = [
+            { id_estado: 2, descripcion: 'Pendiente' },
+            { id_estado: 3, descripcion: 'En proceso' },
+            { id_estado: 7, descripcion: 'En camino' },
+            { id_estado: 5, descripcion: 'Entregado' },
+            { id_estado: 6, descripcion: 'Cancelado' }
+        ];
+
+        estadoSelect.innerHTML = '<option value="">Seleccione un estado</option>';
+
+        fallback.forEach(e => {
+            const opt = document.createElement('option');
+            opt.value = e.id_estado;
+            opt.textContent = e.descripcion;
+            estadoSelect.appendChild(opt);
+        });
+    }
+}
+
+async function cargarProductosCatalogo() {
+    try {
+        const res = await fetch(`${API_BASE}/producto/`, {
+            headers: getHeaders()
+        });
+
+        if (!res.ok) {
+            throw new Error(await parseErrorResponse(res, 'Error al cargar productos'));
+        }
+
+        productosCatalogo = await res.json();
+        console.log('Productos catálogo cargados:', productosCatalogo.length);
+
+    } catch (e) {
+        productosCatalogo = [];
+        showToast('Error al cargar productos: ' + e.message, 'error');
+    }
+}
+
+function getSubtotal() {
+    return productosPedido.reduce((acc, p) => {
+        const precioUnitario = Number(p.precio_unitario);
+        const cantidad = Number(p.cantidad);
+        const precioDisenio = Number(p.precio_disenio);
+
+        return acc + (precioUnitario * cantidad) + precioDisenio;
+    }, 0);
+}
+
+function getPrecioEnvio() {
+    const value = Number(precioEnvioInput.value);
+    return Number.isNaN(value) || value < 0 ? 0 : value;
+}
+
+function actualizarResumen() {
+    const subtotal = getSubtotal();
+    const envio = getPrecioEnvio();
+    const total = subtotal + envio;
+
+    subtotalSpan.innerText = `$${subtotal.toFixed(2)}`;
+    document.getElementById('envio').innerText = `$${envio.toFixed(2)}`;
+    totalSpan.innerText = `$${total.toFixed(2)}`;
+}
+
+function renderizarProductos() {
+    if (productosPedido.length === 0) {
+        productosContainer.innerHTML = `
+            <div class="text-center text-slate-400 py-4">
+                No hay productos agregados. Presione "Agregar producto".
+            </div>
+        `;
+
+        actualizarResumen();
+        return;
+    }
+
+    productosContainer.innerHTML = '';
+
+    productosPedido.forEach((p, idx) => {
+        const div = document.createElement('div');
+        div.className = 'flex justify-between items-center p-3 bg-zinc-50 rounded-xl';
+
+        const subtotalProducto =
+            (Number(p.precio_unitario) * Number(p.cantidad)) + Number(p.precio_disenio);
+
+        div.innerHTML = `
+            <div>
+                <span class="font-bold">${escapeHtml(p.nombre)}</span>
+                <br>
+                <span class="text-sm text-zinc-600">Cantidad: ${escapeHtml(p.cantidad)}</span>
+                <br>
+                <span class="text-sm text-zinc-600">Precio unitario: $${Number(p.precio_unitario).toFixed(2)}</span>
+                <br>
+                <span class="text-sm text-zinc-600">Precio de diseño: $${Number(p.precio_disenio).toFixed(2)}</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="font-bold text-brand-primary">$${subtotalProducto.toFixed(2)}</span>
+                <button type="button" class="eliminar-producto text-red-500 hover:bg-red-50 p-1 rounded-full" data-idx="${idx}">
+                    🗑️
+                </button>
+            </div>
+        `;
+
+        productosContainer.appendChild(div);
+    });
+
+    document.querySelectorAll('.eliminar-producto').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const idx = parseInt(btn.dataset.idx);
+            productosPedido.splice(idx, 1);
+            renderizarProductos();
+        });
+    });
+
+    actualizarResumen();
+}
+
+function mostrarModalAgregarProducto() {
+    if (productosCatalogo.length === 0) {
+        showToast('No hay productos registrados. Primero agregue productos desde el módulo de productos.', 'warning');
+        return;
+    }
+
+    const modalProducto = document.createElement('div');
+    modalProducto.className = 'fixed inset-0 modal-overlay flex items-center justify-center p-4 z-50';
+
+    modalProducto.innerHTML = `
+        <div class="bg-white rounded-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold mb-2">Agregar Producto al Pedido</h3>
+
+            <p class="text-sm text-zinc-500 mb-4">
+                Selecciona el producto, indica la cantidad solicitada y agrega el precio de diseño personalizado.
+            </p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-zinc-600 mb-1">Producto</label>
+                    <select id="select-producto" class="w-full p-3 border rounded-xl">
+                        <option value="">Seleccione producto</option>
+                        ${productosCatalogo.map(p => `
+                            <option
+                                value="${p.id_producto}"
+                                data-precio="${p.precio_unitario || 0}"
+                                data-nombre="${escapeHtml(p.descripcion || `Producto ${p.id_producto}`)}"
+                            >
+                                ${escapeHtml(p.descripcion || `Producto ${p.id_producto}`)} - $${Number(p.precio_unitario || 0).toFixed(2)}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-zinc-600 mb-1">Cantidad</label>
+                    <input id="cantidad-producto" type="number" value="1" min="1" step="1" class="w-full p-3 border rounded-xl">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-zinc-600 mb-1">Precio de diseño</label>
+                    <input id="precio-disenio-producto" type="number" value="0" min="0" step="0.01" class="w-full p-3 border rounded-xl">
+                </div>
+            </div>
+
+            <div class="text-xs text-zinc-500 mt-4 bg-zinc-50 p-3 rounded-xl">
+                <p><strong>Producto:</strong> pastel o artículo seleccionado.</p>
+                <p><strong>Cantidad:</strong> número de unidades solicitadas.</p>
+                <p><strong>Precio de diseño:</strong> costo extra por decoración o personalización.</p>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button id="cancelar-producto" class="px-4 py-2 border rounded-xl">Cancelar</button>
+                <button id="confirmar-producto" class="px-4 py-2 bg-brand-primary text-white rounded-xl">Agregar</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modalProducto);
+
+    const selectProducto = modalProducto.querySelector('#select-producto');
+
+    modalProducto.querySelector('#cancelar-producto').addEventListener('click', () => {
+        modalProducto.remove();
+    });
+
+    modalProducto.querySelector('#confirmar-producto').addEventListener('click', () => {
+        const id_producto = selectProducto.value;
+
+        if (!id_producto) {
+            showToast('Seleccione un producto', 'warning');
+            return;
+        }
+
+        const cantidad = parseInt(modalProducto.querySelector('#cantidad-producto').value);
+
+        if (Number.isNaN(cantidad) || cantidad < 1) {
+            showToast('Cantidad válida requerida', 'warning');
+            return;
+        }
+
+        const precio_disenio = Number(modalProducto.querySelector('#precio-disenio-producto').value);
+
+        if (Number.isNaN(precio_disenio) || precio_disenio < 0) {
+            showToast('Precio de diseño válido requerido', 'warning');
+            return;
+        }
+
+        const selectedOption = selectProducto.options[selectProducto.selectedIndex];
+        const nombre = selectedOption.dataset.nombre;
+        const precio_unitario = Number(selectedOption.dataset.precio || 0);
+
+        const existente = productosPedido.find(p => String(p.id_producto) === String(id_producto));
+
+        if (existente) {
+            existente.cantidad += cantidad;
+            existente.precio_disenio += precio_disenio;
+        } else {
+            productosPedido.push({
+                id_producto: parseInt(id_producto),
+                nombre,
+                cantidad,
+                precio_unitario,
+                precio_disenio
+            });
+        }
+
+        renderizarProductos();
+        modalProducto.remove();
+    });
+}
+
+async function crearCotizacion() {
+    const datosCotizacion = {
+        precio_envio: getPrecioEnvio(),
+        detalles: productosPedido.map(p => ({
+            id_producto: parseInt(p.id_producto),
+            cantidad: parseInt(p.cantidad),
+            precio_disenio: Number(p.precio_disenio)
+        }))
+    };
+
+    const res = await fetch(`${API_BASE}/cotizacion/`, {
+        method: 'POST',
+        headers: getHeaders(),
+        body: JSON.stringify(datosCotizacion)
+    });
+
+    if (!res.ok) {
+        throw new Error(await parseErrorResponse(res, 'Error al crear cotización'));
+    }
+
+    return res.json();
+}
+
+async function crearPedido(event) {
+    event.preventDefault();
+
+    const id_cliente = parseInt(clienteSelect.value);
+    const id_direccion = parseInt(direccionSelect.value);
+    const id_estado = parseInt(estadoSelect.value);
+    const fecha_entrega = document.getElementById('fecha_entrega').value;
+    const comentario = document.getElementById('comentario').value.trim();
+    const tipo_entrega = document.getElementById('tipo_entrega').value === 'true';
+
+    const subtotal = getSubtotal();
+    const total = subtotal + getPrecioEnvio();
+
+    if (!id_cliente) {
+        showToast('Seleccione un cliente', 'warning');
+        return;
+    }
+
+    if (!id_direccion) {
+        showToast('Seleccione una dirección', 'warning');
+        return;
+    }
+
+    if (!id_estado) {
+        showToast('Seleccione un estado', 'warning');
+        return;
+    }
+
+    if (!fecha_entrega) {
+        showToast('Seleccione fecha de entrega', 'warning');
+        return;
+    }
+
+    if (productosPedido.length === 0) {
+        showToast('Agregue al menos un producto al pedido', 'warning');
+        return;
+    }
+
+    const btnSubmit = document.getElementById('btn-submit');
+    const originalText = btnSubmit.innerHTML;
+
+    btnSubmit.innerHTML = '<span class="material-symbols-outlined animate-spin">progress_activity</span> Creando...';
+    btnSubmit.disabled = true;
+
+    try {
+        const nuevaCotizacion = await crearCotizacion();
+
+        const datosPedido = {
+            id_direccion,
+            id_estado,
+            id_cliente,
+            id_cotizacion: nuevaCotizacion.id_cotizacion,
+            fecha_entrega: new Date(fecha_entrega).toISOString(),
+            fecha_pedido: new Date().toISOString(),
+            comentario,
+            tipo_entrega,
+            subtotal,
+            total
+        };
+
+        const resPedido = await fetch(`${API_BASE}/pedidos/`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(datosPedido)
+        });
+
+        if (!resPedido.ok) {
+            throw new Error(await parseErrorResponse(resPedido, 'Error al crear pedido'));
+        }
+
+        const nuevoPedido = await resPedido.json();
+
+        showToast(`Pedido #${nuevoPedido.id_pedido} creado correctamente`, 'success');
+
+        setTimeout(() => {
+            window.location.href = 'pedidos.html';
+        }, 1500);
+
+    } catch (error) {
+        showToast('Error al crear pedido: ' + error.message, 'error', 6000);
+        btnSubmit.innerHTML = originalText;
+        btnSubmit.disabled = false;
+    }
+}
+
+async function nuevoCliente() {
+    const modal = document.getElementById('modal-cliente');
+    modal.classList.remove('hidden');
+
+    document.getElementById('guardar-cliente').onclick = async () => {
+        const nombre = document.getElementById('new_nombre').value.trim();
+        const apellido = document.getElementById('new_apellido').value.trim();
+        const telefono = document.getElementById('new_telefono').value.trim();
+
+        if (!nombre || !apellido) {
+            showToast('Nombre y apellido son obligatorios', 'warning');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/cliente/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    nombre,
+                    apellido,
+                    telefono
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(await parseErrorResponse(res, 'Error al crear cliente'));
+            }
+
+            const nuevo = await res.json();
+
+            showToast('Cliente creado correctamente', 'success');
+
+            await cargarClientes();
+
+            if (nuevo.id_cliente) {
+                clienteSelect.value = nuevo.id_cliente;
+            }
+
+            modal.classList.add('hidden');
+
+            document.getElementById('new_nombre').value = '';
+            document.getElementById('new_apellido').value = '';
+            document.getElementById('new_telefono').value = '';
+
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    };
+
+    document.getElementById('cancelar-modal-cliente').onclick = () => {
+        modal.classList.add('hidden');
+    };
+}
+
+async function nuevaDireccion() {
+    const idCliente = parseInt(clienteSelect.value);
+
+    if (!idCliente) {
+        showToast('Primero seleccione un cliente', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('modal-direccion');
+    modal.classList.remove('hidden');
+
+    document.getElementById('guardar-direccion').onclick = async () => {
+        const descripcion = document.getElementById('new_descripcion').value.trim();
+
+        if (!descripcion) {
+            showToast('La dirección es obligatoria', 'warning');
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/direccion/`, {
+                method: 'POST',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    id_cliente: idCliente,
+                    descripcion
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error(await parseErrorResponse(res, 'Error al crear dirección'));
+            }
+
+            const nueva = await res.json();
+
+            showToast('Dirección agregada correctamente', 'success');
+
+            await cargarTodasDirecciones();
+            filtrarDireccionesPorCliente(idCliente);
+
+            if (nueva.id_direccion) {
+                direccionSelect.value = nueva.id_direccion;
+            }
+
+            modal.classList.add('hidden');
+            document.getElementById('new_descripcion').value = '';
+
+        } catch (e) {
+            showToast('Error: ' + e.message, 'error');
+        }
+    };
+
+    document.getElementById('cancelar-modal-direccion').onclick = () => {
+        modal.classList.add('hidden');
+    };
+}
+
+// ============================================
+// FUNCIÓN PARA CARGAR DATOS DESDE COTIZACIÓN CONFIRMADA
+// ============================================
+function cargarDatosDesdeCotizacion() {
+    const datosGuardados = sessionStorage.getItem("datos_pedido_desde_cotizacion");
+    
+    if (!datosGuardados) {
+        console.log("No hay cotización pendiente para convertir en pedido");
+        return false;
+    }
+    
+    try {
+        const cotizacion = JSON.parse(datosGuardados);
+        console.log("Cargando datos desde cotización:", cotizacion);
+        
+        // 1. Mostrar mensaje de qué cotización se está usando
+        showToast(`📋 Usando cotización #${cotizacion.id_cotizacion_original} para este pedido`, 'info', 4000);
+        
+        // 2. Agregar una nota visual en el formulario
+        const notasTextarea = document.getElementById('comentario');
+        const fechaCotizacion = cotizacion.fecha_cotizacion ? new Date(cotizacion.fecha_cotizacion).toLocaleDateString() : new Date().toLocaleDateString();
+        const notaCotizacion = `[Pedido generado desde cotización #${cotizacion.id_cotizacion_original} - ${fechaCotizacion}]\n\n`;
+        
+        if (!notasTextarea.value.includes("generado desde cotización")) {
+            notasTextarea.value = notaCotizacion + (notasTextarea.value || "");
+        }
+        
+        // 3. Cargar el precio de envío desde la cotización
+        if (cotizacion.envio > 0) {
+            const envioInput = document.getElementById('precio_envio');
+            envioInput.value = cotizacion.envio;
+            actualizarResumen();
+        }
+        
+        // 4. IMPORTANTE: Esperar a que los productos del catálogo estén cargados
+        if (productosCatalogo.length === 0) {
+            // Si aún no hay productos cargados, esperar
+            const checkInterval = setInterval(() => {
+                if (productosCatalogo.length > 0) {
+                    clearInterval(checkInterval);
+                    procesarProductosCotizacion(cotizacion.productos);
+                }
+            }, 100);
+            
+            // Timeout por si algo falla
+            setTimeout(() => {
+                clearInterval(checkInterval);
+                if (productosCatalogo.length === 0) {
+                    showToast("Error: No se pudieron cargar los productos del catálogo", "error");
+                }
+            }, 5000);
+        } else {
+            procesarProductosCotizacion(cotizacion.productos);
+        }
+        
+        // 5. Sugerir el cliente si existe en la cotización
+        if (cotizacion.cliente_nombre && cotizacion.cliente_nombre !== "Cliente de cotización") {
+            const clienteField = document.getElementById('id_cliente').parentElement;
+            if (!clienteField.querySelector('.cotizacion-hint')) {
+                const clienteHint = document.createElement('div');
+                clienteHint.className = 'text-xs text-brand-primary mt-1 p-2 bg-brand-primary/5 rounded-lg cotizacion-hint';
+                clienteHint.innerHTML = `💡 Cliente sugerido de cotización: <strong>${escapeHtml(cotizacion.cliente_nombre)}</strong>`;
+                clienteField.appendChild(clienteHint);
+                
+                // Opcional: Intentar buscar y seleccionar automáticamente si existe el cliente
+                const clienteExacto = clientes.find(c => 
+                    `${c.nombre} ${c.apellido}`.toLowerCase() === cotizacion.cliente_nombre.toLowerCase()
+                );
+                if (clienteExacto) {
+                    setTimeout(() => {
+                        clienteSelect.value = clienteExacto.id_cliente;
+                        showToast(`Cliente "${cotizacion.cliente_nombre}" seleccionado automáticamente`, 'success');
+                    }, 500);
+                }
+            }
+        }
+        
+        // 6. Limpiar el storage después de un delay (para no reutilizar)
+        setTimeout(() => {
+            sessionStorage.removeItem("datos_pedido_desde_cotizacion");
+            console.log("Datos de cotización eliminados del sessionStorage");
+        }, 5000);
+        
+        return true;
+        
+    } catch (error) {
+        console.error("Error al procesar datos de cotización:", error);
+        showToast("Error al cargar los datos de la cotización", "error");
+        return false;
+    }
+}
+
+// Función auxiliar para procesar los productos de la cotización
+function procesarProductosCotizacion(productosCotizacion) {
+    if (!productosCotizacion || productosCotizacion.length === 0) {
+        showToast("La cotización no tiene productos", "warning");
+        return;
+    }
+    
+    console.log("Procesando productos de cotización:", productosCotizacion);
+    
+    // Mapear los productos de la cotización a productosPedido
+    const nuevosProductos = [];
+    
+    productosCotizacion.forEach(prodCot => {
+        // Buscar el producto en el catálogo para obtener su precio_unitario actual
+        const productoCatalogo = productosCatalogo.find(p => p.id_producto === prodCot.id_producto);
+        
+        if (productoCatalogo) {
+            nuevosProductos.push({
+                id_producto: prodCot.id_producto,
+                nombre: productoCatalogo.descripcion || prodCot.nombre || `Producto ${prodCot.id_producto}`,
+                cantidad: parseFloat(prodCot.cantidad),
+                precio_unitario: parseFloat(productoCatalogo.precio_unitario) || parseFloat(prodCot.precio_unitario) || 0,
+                precio_disenio: parseFloat(prodCot.precio_disenio) || 0
+            });
+        } else {
+            // Si no se encuentra en el catálogo, usar los datos de la cotización
+            nuevosProductos.push({
+                id_producto: prodCot.id_producto,
+                nombre: prodCot.nombre || `Producto ${prodCot.id_producto}`,
+                cantidad: parseFloat(prodCot.cantidad),
+                precio_unitario: parseFloat(prodCot.precio_unitario) || 0,
+                precio_disenio: parseFloat(prodCot.precio_disenio) || 0
+            });
+            console.warn(`Producto ${prodCot.id_producto} no encontrado en catálogo, usando datos guardados`);
+        }
+    });
+    
+    // Agregar los productos al pedido actual
+    if (nuevosProductos.length > 0) {
+        productosPedido.push(...nuevosProductos);
+        renderizarProductos();
+        showToast(`✅ Se cargaron ${nuevosProductos.length} producto(s) desde la cotización`, 'success');
+        actualizarResumen();
+    }
+}
+
+clienteSelect.addEventListener('change', async () => {
+    const id = clienteSelect.value;
+
+    if (id) {
+        await cargarTodasDirecciones();
+        filtrarDireccionesPorCliente(id);
+    } else {
+        direccionSelect.innerHTML = '<option value="">Primero seleccione un cliente</option>';
+        direccionSelect.disabled = true;
+    }
+});
+
+precioEnvioInput.addEventListener('input', actualizarResumen);
+
+document.getElementById('btn-agregar-producto').addEventListener('click', mostrarModalAgregarProducto);
+document.getElementById('btn-nuevo-cliente').addEventListener('click', nuevoCliente);
+document.getElementById('btn-nueva-direccion').addEventListener('click', nuevaDireccion);
+document.getElementById('form-pedido').addEventListener('submit', crearPedido);
+
+async function init() {
+    await Promise.all([
+        cargarClientes(),
+        cargarTodasDirecciones(),
+        cargarEstados(),
+        cargarProductosCatalogo()
+    ]);
+
+    const fechaURL = getParameterByName('fecha');
+    const fechaInput = document.getElementById('fecha_entrega');
+
+    if (fechaURL && fechaURL.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        fechaInput.value = fechaURL;
+    } else {
+        const hoy = new Date();
+        hoy.setDate(hoy.getDate() + 3);
+        fechaInput.value = hoy.toISOString().slice(0, 10);
+    }
+
+    actualizarResumen();
+    
+    // 🔥 Cargar datos desde cotización si existen (después de que todo esté cargado)
+    setTimeout(() => {
+        cargarDatosDesdeCotizacion();
+    }, 500);
+}
+
+init();
+</script>
+</body>
+</html>

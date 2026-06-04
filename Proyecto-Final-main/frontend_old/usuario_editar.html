@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: { "primary": "#5d1926", "accent-pink": "#FEBDC6", "background-light": "#f8f6f6", "background-dark": "#1f1315" },
+                fontFamily: { "display": ["Plus Jakarta Sans"] },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+            },
+        },
+    }
+</script>
+<title>Editar Usuario - Nonna DB</title>
+</head>
+<body class="bg-accent-pink font-display min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+    <main class="flex-1 flex items-center justify-center p-6 md:p-12">
+        <div class="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div class="px-8 pt-8 pb-4 flex justify-between items-start">
+                <div>
+                    <div class="flex items-center gap-2 text-primary/60 text-sm mb-2">
+                        <a href="usuarios.html" class="hover:underline flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs"></span> Usuarios
+                        </a>
+                        <span>/</span>
+                        <span class="text-primary font-medium">Editar Usuario</span>
+                    </div>
+                    <h1 class="text-3xl font-bold text-primary tracking-tight">Editar Usuario</h1>
+                    <p class="text-primary/60 text-sm mt-1">Actualice la información del perfil del sistema Nonna</p>
+                </div>
+                <a href="usuarios.html" class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary/5 text-primary text-sm font-bold border border-primary/10 hover:bg-primary/10 transition-colors">
+                    Volver al listado
+                </a>
+            </div>
+            <hr class="mx-8 border-primary/10"/>
+
+            <div id="error-message" class="mx-8 mt-4 hidden bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div class="flex items-center gap-2 text-red-700">
+                    <span class="material-symbols-outlined">error</span>
+                    <span id="error-text" class="font-medium"></span>
+                </div>
+            </div>
+
+            <form id="form-editar" class="p-8 space-y-6">
+                <!-- Campo ID oculto (se usa internamente) -->
+                <input type="hidden" id="id_usuario">
+                <input type="hidden" id="nombre_original">
+
+                <div class="flex flex-col gap-2">
+                    <label class="text-primary text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm"></span>
+                        Nombre de Usuario
+                    </label>
+                    <input id="nombre" class="form-input block w-full rounded-lg border-primary/20 bg-white text-primary h-12 px-4 text-base focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Ingrese nombre de usuario" type="text" required>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-primary text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm"></span>
+                        Rol de Usuario
+                    </label>
+                    <div class="relative">
+                        <select id="id_rol" class="form-select block w-full rounded-lg border-primary/20 bg-white text-primary h-12 px-4 text-base focus:border-primary focus:ring-1 focus:ring-primary appearance-none transition-all" required>
+                            <option value="">Cargando roles...</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-primary">
+                            <span class="material-symbols-outlined"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-primary text-sm font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm"></span>
+                        Nueva Contraseña
+                    </label>
+                    <div class="relative">
+                        <input id="contrasena" class="form-input block w-full rounded-lg border-primary/20 bg-white text-primary h-12 px-4 pr-12 text-base focus:border-primary focus:ring-1 focus:ring-primary transition-all" placeholder="Dejar en blanco para mantener la actual" type="password">
+                        <button type="button" class="absolute inset-y-0 right-0 flex items-center px-4 text-primary/40 hover:text-primary transition-colors toggle-password">
+                            <span class="material-symbols-outlined"></span>
+                        </button>
+                    </div>
+                    <p class="text-primary/50 text-[11px]">Se recomienda usar al menos 8 caracteres con letras y números.</p>
+                </div>
+                <div class="flex items-center justify-end gap-4 pt-4 mt-8">
+                    <a href="usuarios.html" class="flex-1 sm:flex-none min-w-[140px] px-6 py-3 rounded-lg border-2 border-primary text-primary font-bold text-sm hover:bg-primary/5 transition-colors uppercase tracking-wider text-center">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="flex-1 sm:flex-none min-w-[160px] px-6 py-3 rounded-lg bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all uppercase tracking-wider">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+            <div class="bg-primary/5 p-4 flex items-center justify-center gap-2">
+                <span class="size-2 bg-green-500 rounded-full animate-pulse"></span>
+                <span class="text-xs font-medium text-primary/60"></span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    const API_BASE = 'http://3.15.13.161:8000/api';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+        return {
+            'accept': 'application/json',
+            'Authorization': `Bearer ${TOKEN}`,
+            'Content-Type': 'application/json'
+        };
+    }
+
+    function mostrarError(mensaje) {
+        const errorDiv = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        errorText.innerText = mensaje;
+        errorDiv.classList.remove('hidden');
+        setTimeout(() => errorDiv.classList.add('hidden'), 8000);
+    }
+
+    // Obtener nombre de la URL (?nombre=xxx)
+    const urlParams = new URLSearchParams(window.location.search);
+    const usuarioNombre = urlParams.get('nombre');
+    if (!usuarioNombre) {
+        mostrarError('No se especificó qué usuario editar. Redirigiendo...');
+        setTimeout(() => window.location.href = 'usuarios.html', 2000);
+    }
+
+    async function cargarRoles(rolSeleccionadoId) {
+        try {
+            const res = await fetch(`${API_BASE}/rol/`, { headers: getHeaders() });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const roles = await res.json();
+            const select = document.getElementById('id_rol');
+            select.innerHTML = '<option value="">Seleccione un rol</option>';
+            roles.forEach(rol => {
+                const option = document.createElement('option');
+                option.value = rol.id_rol;
+                option.textContent = rol.descripcion || `Rol ${rol.id_rol}`;
+                if (rolSeleccionadoId && rol.id_rol === rolSeleccionadoId) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        } catch (error) {
+            mostrarError('Error al cargar roles: ' + error.message);
+        }
+    }
+
+    async function cargarUsuario() {
+        try {
+            const res = await fetch(`${API_BASE}/usuario/${usuarioNombre}`, { headers: getHeaders() });
+            if (res.status === 404) {
+                throw new Error(`Usuario "${usuarioNombre}" no encontrado.`);
+            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const usuario = await res.json();
+            document.getElementById('id_usuario').value = usuario.id_usuario;
+            document.getElementById('nombre_original').value = usuario.nombre;
+            document.getElementById('nombre').value = usuario.nombre || '';
+            await cargarRoles(usuario.id_rol);
+        } catch (error) {
+            mostrarError('Error al cargar el usuario: ' + error.message);
+            document.getElementById('nombre').disabled = true;
+            document.getElementById('id_rol').disabled = true;
+            document.getElementById('contrasena').disabled = true;
+            document.querySelector('button[type="submit"]').disabled = true;
+        }
+    }
+
+    async function actualizarUsuario(event) {
+        event.preventDefault();
+        const nuevoNombre = document.getElementById('nombre').value.trim();
+        const id_rol = parseInt(document.getElementById('id_rol').value);
+        const contrasena = document.getElementById('contrasena').value;
+        const id_usuario = document.getElementById('id_usuario').value;
+
+        if (!nuevoNombre) { mostrarError('El nombre es obligatorio'); return; }
+        if (!id_rol) { mostrarError('Seleccione un rol'); return; }
+
+        const datos = { nombre: nuevoNombre, id_rol };
+        if (contrasena) datos.contrasena = contrasena;
+        try {
+            let res = await fetch(`${API_BASE}/usuario/${id_usuario}`, {
+                method: 'PUT',
+                headers: getHeaders(),
+                body: JSON.stringify(datos)
+            });
+            if (res.status === 404) {
+                // Intentar con el nombre original (o el nuevo)
+                const nombreOriginal = document.getElementById('nombre_original').value;
+                res = await fetch(`${API_BASE}/usuario/${nombreOriginal}`, {
+                    method: 'PUT',
+                    headers: getHeaders(),
+                    body: JSON.stringify(datos)
+                });
+            }
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || `HTTP ${res.status}`);
+            }
+            alert('Usuario actualizado correctamente');
+            window.location.href = 'usuarios.html';
+        } catch (error) {
+            mostrarError('Error al actualizar: ' + error.message);
+        }
+    }
+
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const input = btn.previousElementSibling;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.querySelector('.material-symbols-outlined').innerText = 'visibility_off';
+            } else {
+                input.type = 'password';
+                btn.querySelector('.material-symbols-outlined').innerText = 'visibility';
+            }
+        });
+    });
+
+    document.getElementById('form-editar').addEventListener('submit', actualizarUsuario);
+    cargarUsuario();
+</script>
+</body>
+</html>

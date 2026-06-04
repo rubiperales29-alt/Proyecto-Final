@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Nonna - Gestión de Productos</title>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: { 
+            "primary": "#5d1927", 
+            "accent-pink": "#FEBDC6", 
+            "background-light": "#f8f6f6", 
+            "background-dark": "#1f1316" 
+          },
+          fontFamily: { "display": ["Plus Jakarta Sans", "sans-serif"] },
+          borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+        },
+      },
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #febdc6; }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .modal-mensaje {
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+  </style>
+</head>
+<body class="bg-accent-pink min-h-screen">
+  <!-- Top Navigation Bar -->
+  <header class="w-full bg-[#f3dfe0] dark:bg-slate-900 border-b border-primary/10 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
+    <div class="flex items-center gap-6">
+      <div class="flex items-center gap-3">
+        <div class="bg-primary p-2 rounded-lg text-white">
+          <span class="material-symbols-outlined block text-2xl">bakery_dining</span>
+        </div>
+        <h1 class="text-primary text-xl font-bold tracking-tight">Nonna</h1>
+      </div>
+      <div class="h-8 w-[1px] bg-primary/20"></div>
+      <a href="index.html" class="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-lg transition-colors duration-200">
+        <span class="material-symbols-outlined">arrow_back</span>
+        <span class="text-sm font-bold leading-normal">Menú de CRUDs</span>
+      </a>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-700">
+        <div class="text-right hidden sm:block">
+          <p id="textoUsuario" class="text-sm font-semibold text-slate-900 dark:text-slate-100">Nombre de usuario</p>
+          <p id="textoRol" class="text-xs text-slate-500">Rol</p>
+        </div>
+      </div>
+      <button id="botonCerrarSesion" class="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+        <span class="material-symbols-outlined text-xl">logout</span>
+        <span class="hidden sm:inline text-sm font-medium">Cerrar Sesión</span>
+      </button>
+    </div>
+  </header>
+  <script>
+    document.getElementById("textoUsuario").innerText = localStorage.getItem("usuario") || "Invitado";
+    document.getElementById("textoRol").innerText = localStorage.getItem("rol") || "Sin rol";
+    const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+    botonCerrarSesion.addEventListener("click", function () {
+      localStorage.clear();
+      window.location.href = "registro.html";
+    });
+  </script>
+
+  <div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+    <div class="layout-container flex h-full grow flex-col">
+      <main class="flex flex-1 justify-center py-8 px-4 sm:px-10 lg:px-20">
+        <div class="layout-content-container flex flex-col max-w-[1200px] flex-1 gap-6">
+          <div class="flex flex-wrap items-end justify-between gap-4">
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center gap-3">
+                <h1 class="text-primary text-4xl font-black tracking-[-0.033em]">Gestión de Productos</h1>
+              </div>
+              <p class="text-primary/70 text-base font-medium">Control total del catálogo artesanal de Nonna</p>
+            </div>
+            <a href="producto_nuevo.html" class="flex items-center justify-center gap-2 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all transform active:scale-95">
+              <span class="material-symbols-outlined">add_box</span>
+              <span>Agregar Producto</span>
+            </a>
+          </div>
+          
+          <!-- Search -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-primary/5">
+            <div class="relative w-full max-w-md">
+              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary/40">search</span>
+              <input id="buscador" class="w-full pl-12 pr-4 py-3 bg-primary/5 border-none rounded-xl focus:ring-2 focus:ring-primary/20 text-primary placeholder:text-primary/40 font-medium" placeholder="Buscar productos...">
+            </div>
+          </div>
+
+          <!-- Tabla con imágenes -->
+          <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-primary/5">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-primary/5">
+                    <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider">PRODUCTO</th>
+                    <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider">RECETA</th>
+                    <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider text-right">PRECIO UNITARIO</th>
+                    <th class="px-8 py-5 text-primary/60 text-xs font-bold uppercase tracking-wider text-right">ACCIONES</th>
+                  </tr>
+                </thead>
+                <tbody id="tabla-productos-body" class="divide-y divide-primary/5">
+                  <tr><td colspan="4" class="text-center py-10 text-primary/50">Cargando productos...NonNull
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODALES CENTRALES -->
+  <div id="modal-exito" class="fixed inset-0 flex items-center justify-center z-[60] hidden modal-mensaje">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 shadow-2xl text-center">
+      <div class="mx-auto mb-4"><span class="material-symbols-outlined text-green-600 text-5xl">check_circle</span></div>
+      <h3 id="exito-titulo" class="text-xl font-bold text-slate-900">¡Éxito!</h3>
+      <p id="exito-mensaje" class="text-slate-500 mt-2"></p>
+      <button id="btn-cerrar-exito" class="mt-6 w-full bg-primary text-white font-bold py-2 px-4 rounded-xl hover:bg-primary/90 transition-colors">Continuar</button>
+    </div>
+  </div>
+
+  <div id="modal-error" class="fixed inset-0 flex items-center justify-center z-[60] hidden modal-mensaje">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 shadow-2xl text-center">
+      <div class="mx-auto mb-4"><span class="material-symbols-outlined text-red-600 text-5xl">error</span></div>
+      <h3 class="text-xl font-bold text-slate-900">Error</h3>
+      <p id="error-mensaje" class="text-slate-500 mt-2"></p>
+      <button id="btn-cerrar-error" class="mt-6 w-full bg-primary text-white font-bold py-2 px-4 rounded-xl hover:bg-primary/90 transition-colors">Aceptar</button>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmación para Eliminar -->
+  <div id="modal-confirmar" class="fixed inset-0 flex items-center justify-center z-[60] hidden modal-mensaje">
+    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+    <div class="relative bg-white rounded-2xl max-w-sm w-full mx-4 p-6 shadow-2xl text-center">
+      <div class="mx-auto mb-4"><span class="material-symbols-outlined text-amber-600 text-5xl">warning</span></div>
+      <h3 class="text-xl font-bold text-slate-900">Confirmar eliminación</h3>
+      <p id="confirmar-mensaje" class="text-slate-500 mt-2">¿Estás seguro de que deseas eliminar este producto?</p>
+      <div class="flex gap-3 mt-6">
+        <button id="btn-cancelar-eliminar" class="flex-1 py-2 px-4 rounded-xl border border-primary/30 text-primary font-bold hover:bg-primary/5 transition-colors">Cancelar</button>
+        <button id="btn-confirmar-eliminar" class="flex-1 py-2 px-4 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 transition-colors">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'http://3.15.13.161:8000/api';
+    const SERVER_BASE = 'http://3.15.13.161:8000';
+    const TOKEN = localStorage.token;
+
+    function getHeaders() {
+      return {
+        'accept': 'application/json',
+        'Authorization': `Bearer ${TOKEN}`,
+        'Content-Type': 'application/json'
+      };
+    }
+
+    // Funciones de modales
+    function mostrarExito(titulo, mensaje, callback) {
+      const modal = document.getElementById('modal-exito');
+      document.getElementById('exito-titulo').innerText = titulo;
+      document.getElementById('exito-mensaje').innerText = mensaje;
+      modal.classList.remove('hidden');
+      document.getElementById('btn-cerrar-exito').onclick = () => {
+        modal.classList.add('hidden');
+        if (callback) callback();
+      };
+    }
+
+    function mostrarError(mensaje) {
+      const modal = document.getElementById('modal-error');
+      document.getElementById('error-mensaje').innerText = mensaje;
+      modal.classList.remove('hidden');
+      document.getElementById('btn-cerrar-error').onclick = () => modal.classList.add('hidden');
+    }
+
+    // Variables para eliminar
+    let productoAEliminar = null;
+
+    function mostrarConfirmacionEliminar(id, nombre) {
+      productoAEliminar = id;
+      const modal = document.getElementById('modal-confirmar');
+      const mensaje = document.getElementById('confirmar-mensaje');
+      mensaje.innerText = `¿Estás seguro de que deseas eliminar "${nombre}"? Esta acción no se puede deshacer.`;
+      modal.classList.remove('hidden');
+    }
+
+    async function eliminarProducto(id) {
+      try {
+        const res = await fetch(`${API_BASE}/producto/${id}`, {
+          method: 'DELETE',
+          headers: getHeaders()
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Error al eliminar');
+        }
+        mostrarExito('¡Eliminado!', 'El producto se ha eliminado correctamente.', () => {
+          cargarProductos(); // Recargar la tabla
+        });
+      } catch (error) {
+        let errorMsg = error.message;
+        if (errorMsg.includes('foreign key') || errorMsg.includes('referenced')) {
+          errorMsg = 'No se puede eliminar este producto porque está referenciado en pedidos o cotizaciones.';
+        }
+        mostrarError(errorMsg);
+      }
+    }
+
+    // Configurar botones del modal de confirmación
+    document.getElementById('btn-cancelar-eliminar').addEventListener('click', () => {
+      document.getElementById('modal-confirmar').classList.add('hidden');
+      productoAEliminar = null;
+    });
+    document.getElementById('btn-confirmar-eliminar').addEventListener('click', async () => {
+      document.getElementById('modal-confirmar').classList.add('hidden');
+      if (productoAEliminar) {
+        await eliminarProducto(productoAEliminar);
+        productoAEliminar = null;
+      }
+    });
+
+    // API Functions
+    async function listarProductos() {
+      const res = await fetch(`${API_BASE}/producto/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return res.json();
+    }
+
+    async function listarRecetas() {
+      const res = await fetch(`${API_BASE}/receta/recetas/`, { headers: getHeaders() });
+      if (!res.ok) throw new Error('Error al cargar recetas');
+      return res.json();
+    }
+
+    let recetasMap = {};
+    let todosProductos = [];
+
+    async function cargarRecetas() {
+      try {
+        const recetas = await listarRecetas();
+        recetasMap = {};
+        recetas.forEach(rec => {
+          recetasMap[rec.id_receta] = rec.descripcion || `Receta ${rec.id_receta}`;
+        });
+      } catch (error) {
+        console.error('Error cargando recetas:', error);
+      }
+    }
+
+    function renderizarProductos(productos) {
+      const tbody = document.getElementById('tabla-productos-body');
+      if (!productos.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-primary/50">No hay productos. ¡Agrega el primero!NonNull`;
+        return;
+      }
+      tbody.innerHTML = '';
+      productos.forEach(prod => {
+        const id = prod.id_producto;
+        const nombreProducto = prod.descripcion || 'Sin nombre';
+        const precio = prod.precio_unitario ? `$${parseFloat(prod.precio_unitario).toFixed(2)}` : '$0.00';
+        const nombreReceta = recetasMap[prod.id_receta] || `Receta ID: ${prod.id_receta}`;
+        
+        // Construir URL de la imagen
+        let imagenUrl = '';
+        if (prod.image_url && prod.image_url !== "null" && prod.image_url.trim() !== "") {
+          imagenUrl = prod.image_url.startsWith('/') ? SERVER_BASE + prod.image_url : prod.image_url;
+        }
+        
+        const fila = `
+          <tr class="hover:bg-primary/[0.02] transition-colors group">
+            <td class="px-8 py-6">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden">
+                  ${imagenUrl ? `<img src="${imagenUrl}" class="w-full h-full object-cover" alt="${escapeHtml(nombreProducto)}" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\'material-symbols-outlined text-primary text-2xl\'>bakery_dining</span>'">` : `<span class="material-symbols-outlined text-primary text-2xl">bakery_dining</span>`}
+                </div>
+                <span class="text-primary font-bold text-lg">${escapeHtml(nombreProducto)}</span>
+              </div>
+            </td>
+            <td class="px-8 py-6">
+              <span class="text-primary text-xs font-extrabold uppercase bg-primary/10 px-3 py-1.5 rounded-full">${escapeHtml(nombreReceta)}</span>
+            </td>
+            <td class="px-8 py-6 text-right">
+              <span class="text-primary font-bold text-xl">${precio}</span>
+            </td>
+            <td class="px-8 py-6">
+              <div class="flex items-center justify-end gap-2">
+                <a href="producto_editar.html?id=${id}" class="p-2 text-primary/60 hover:text-primary hover:bg-primary/10 rounded-lg transition-all" title="Editar">
+                  <span class="material-symbols-outlined">edit</span>
+                </a>
+                <button class="btn-eliminar p-2 text-primary/60 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all" data-id="${id}" data-nombre="${escapeHtml(nombreProducto)}" title="Eliminar">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', fila);
+      });
+
+      // Asignar eventos a los botones de eliminar
+      document.querySelectorAll('.btn-eliminar').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = btn.getAttribute('data-id');
+          const nombre = btn.getAttribute('data-nombre');
+          mostrarConfirmacionEliminar(id, nombre);
+        });
+      });
+    }
+
+    async function cargarProductos() {
+      const tbody = document.getElementById('tabla-productos-body');
+      tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-primary/50">Cargando productos...NonNull`;
+      try {
+        await cargarRecetas();
+        todosProductos = await listarProductos();
+        renderizarProductos(todosProductos);
+      } catch (error) {
+        console.error(error);
+        let mensaje = error.message.includes('401') ? 'Token inválido o expirado. Inicia sesión nuevamente.' : (error.message.includes('Failed to fetch') ? 'Error de conexión. Verifica el servidor.' : error.message);
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-red-500">Error: ${mensaje}NonNull`;
+      }
+    }
+
+    // Búsqueda en tiempo real
+    const buscador = document.getElementById('buscador');
+    if (buscador) {
+      buscador.addEventListener('input', (e) => {
+        const texto = e.target.value.toLowerCase();
+        if (!texto.trim()) return renderizarProductos(todosProductos);
+        const filtradas = todosProductos.filter(p => p.descripcion?.toLowerCase().includes(texto));
+        renderizarProductos(filtradas);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : (m === '<' ? '&lt;' : '&gt;'));
+    }
+
+    cargarProductos();
+  </script>
+</body>
+</html>
